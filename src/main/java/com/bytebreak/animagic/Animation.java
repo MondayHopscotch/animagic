@@ -6,7 +6,7 @@ import com.sun.istack.internal.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Animation {
+public class Animation implements IFrameByFrameAnimation {
     private String name;
     private List<AnimationListener> listeners = new ArrayList<>();
     private TextureRegion[] textures;
@@ -47,11 +47,22 @@ public class Animation {
         return totalDuration;
     }
 
+    public int totalFrames(){
+        return textures.length;
+    }
+
     public void reset(){
         currentDuration = 0;
         finishedPlaying = false;
     }
 
+    public void setFrameIndex(int index){
+        if (index < 0) throw new AnimagicException("Cannot set the frame index to less than 0");
+        if (index >= totalFrames()) throw new AnimagicException("Cannot set the frame index to more than the totalFrames(" + totalFrames() + ") - 1");
+        currentDuration = (percentagePerFrame * index) * totalDuration;
+    }
+
+    @Override
     public void update(float delta){
         currentDuration += delta * playDirectionModifier;
         if (currentDuration >= totalDuration || currentDuration <= 0) {
@@ -93,13 +104,15 @@ public class Animation {
         }
     }
 
+    @Override
     public int getFrameIndex(){
         if (percentagePerFrame <= 0) return 0;
-        int frame = (int)Math.ceil(percentComplete() / percentagePerFrame);
-        if (frame != 0) frame--; // math above requires special case for 0
-        return frame;
+        float percComp = percentComplete();
+        if (percComp == 1) return totalFrames() - 1;
+        return (int)Math.floor(percComp / percentagePerFrame);
     }
 
+    @Override
     public TextureRegion getFrame(){
         return textures[getFrameIndex()];
     }
