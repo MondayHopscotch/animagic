@@ -3,7 +3,9 @@ package com.bytebreak.animagic;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.sun.istack.internal.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AnimationBlend implements IFrameByFrameAnimation {
@@ -13,6 +15,12 @@ public class AnimationBlend implements IFrameByFrameAnimation {
 
     public AnimationBlend(int frameCount){
         this.frameCount = frameCount;
+    }
+
+    public List<String> names(){
+        List<String> l = new ArrayList<>();
+        l.addAll(blendData.keySet());
+        return l;
     }
 
     public void addAnimation(@NotNull Animation animation){
