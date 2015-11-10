@@ -4,6 +4,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AnimationTest {
 
     @Test
@@ -132,5 +135,49 @@ public class AnimationTest {
         Assert.assertEquals(0, a.getFrameIndex());
         a.update(4);
         Assert.assertEquals(1, a.getFrameIndex());
+    }
+
+    @Test
+    public void testAnimationListenerFINISHED(){
+        TextureRegion t1 = new TextureRegion();
+        TextureRegion t2 = new TextureRegion();
+        TextureRegion t3 = new TextureRegion();
+        Animation a = new Animation("name", Animation.AnimationPlayState.ONCE, 10, new TextureRegion[]{t1, t2, t3});
+        final List<Animation.AnimationListenerState> states = new ArrayList<>();
+        a.listen((self, state) -> {
+            states.add(state);
+        });
+        a.update(20);
+        Assert.assertTrue(states.contains(Animation.AnimationListenerState.FINISHED));
+    }
+
+    @Test
+    public void testAnimationListenerREPEATED(){
+        TextureRegion t1 = new TextureRegion();
+        TextureRegion t2 = new TextureRegion();
+        TextureRegion t3 = new TextureRegion();
+        Animation a = new Animation("name", Animation.AnimationPlayState.REPEAT, 10, new TextureRegion[]{t1, t2, t3});
+        final List<Animation.AnimationListenerState> states = new ArrayList<>();
+        a.listen((self, state) -> {
+            states.add(state);
+        });
+        a.update(20);
+        Assert.assertTrue(states.contains(Animation.AnimationListenerState.REPEATED));
+    }
+
+    @Test
+    public void testAnimationListenerPINGPONGED(){
+        TextureRegion t1 = new TextureRegion();
+        TextureRegion t2 = new TextureRegion();
+        TextureRegion t3 = new TextureRegion();
+        Animation a = new Animation("name", Animation.AnimationPlayState.PINGPONG, 10, new TextureRegion[]{t1, t2, t3});
+        final List<Animation.AnimationListenerState> states = new ArrayList<>();
+        a.listen((self, state) -> {
+            states.add(state);
+        });
+        a.update(20);
+        a.update(20);
+        Assert.assertTrue(states.contains(Animation.AnimationListenerState.PINGED));
+        Assert.assertTrue(states.contains(Animation.AnimationListenerState.PONGED));
     }
 }

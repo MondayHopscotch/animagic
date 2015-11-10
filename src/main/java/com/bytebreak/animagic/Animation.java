@@ -59,18 +59,37 @@ public class Animation {
                 case ONCE:
                     currentDuration = totalDuration;
                     if (!finishedPlaying){
-                        // notify listeners of finished animation
+                        notify(AnimationListenerState.FINISHED);
                     }
                     finishedPlaying = true;
                     break;
                 case REPEAT:
                     currentDuration = 0;
+                    notify(AnimationListenerState.REPEATED);
                     break;
                 case PINGPONG:
-                    currentDuration = (playDirectionModifier == 1 ? totalDuration : 0);
+                    if (playDirectionModifier == 1){
+                        currentDuration = totalDuration;
+                        notify(AnimationListenerState.PINGED);
+                    } else {
+                        currentDuration = 0;
+                        notify(AnimationListenerState.PONGED);
+                    }
                     playDirectionModifier *= -1;
                     break;
             }
+        }
+
+        if (keyframes != null){
+            int curFrame = getFrameIndex();
+            boolean isKeyframe = false;
+            for (int keyframe : keyframes){
+                if (keyframe == curFrame){
+                    isKeyframe = true;
+                    break;
+                }
+            }
+            if (isKeyframe) notify(AnimationListenerState.KEYFRAME);
         }
     }
 
@@ -98,9 +117,21 @@ public class Animation {
         listeners.add(listener);
     }
 
+    private void notify(AnimationListenerState listenerState){
+        for (AnimationListener listener : listeners) listener.animationNotification(this, listenerState);
+    }
+
     public enum AnimationPlayState {
         REPEAT,
         PINGPONG,
         ONCE
+    }
+
+    public enum AnimationListenerState {
+        FINISHED,
+        PINGED,
+        PONGED,
+        REPEATED,
+        KEYFRAME
     }
 }
