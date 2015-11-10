@@ -42,6 +42,10 @@ public class AnimationBlend implements IFrameByFrameAnimation {
         currentAnimation().setFrameIndex(old.getFrameIndex());
     }
 
+    public void reset() {
+        for (String key : blendData.keySet()) blendData.get(key).reset();
+    }
+
     private Animation currentAnimation(){
         return blendData.get(currentAnimationName);
     }

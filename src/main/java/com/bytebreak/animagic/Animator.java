@@ -1,6 +1,7 @@
 package com.bytebreak.animagic;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public class Animator {
     }
 
     public void addAnimation(@NotNull IFrameByFrameAnimation animation){
-        if (animation == null) throw new AnimagicException("Cannot add a null animation");
+        if (animation == null) throw new AnimagicException(name + ": Cannot add a null animation");
         animations.add(animation);
     }
 
@@ -34,13 +35,17 @@ public class Animator {
     }
 
     public void switchToAnimation(String animationName){
-        if (!hasAnimation(animationName)) throw new AnimagicException("Animator does not have an animation by the name: " + animationName);
+        if (!hasAnimation(animationName))
+            throw new AnimagicException(name + ": Animator does not have an animation by the name: " + animationName);
+        IFrameByFrameAnimation old = null;
+        if (currentAnimationName != null) old = getAnimation();
         currentAnimationName = animationName;
         IFrameByFrameAnimation curAnimation = getAnimation();
         if (curAnimation instanceof Animation){
-            ((Animation) curAnimation).reset();
+            curAnimation.reset();
         } else if (curAnimation instanceof AnimationBlend) {
             ((AnimationBlend)curAnimation).switchToAnimation(animationName);
+            if (old != curAnimation) curAnimation.reset();
         }
     }
 
@@ -49,11 +54,24 @@ public class Animator {
     }
     public void draw(SpriteBatch spriteBatch){
         // TODO: somehow the actual size of the thing must get to this point, or maybe i just return a texture region?
-        spriteBatch.draw(getAnimation().getFrame(), 0, 0);
+        spriteBatch.draw(getFrame(), 0, 0);
+    }
+
+    public TextureRegion getFrame() {
+        return getAnimation().getFrame();
+    }
+
+    public int getFrameIndex() {
+        return getAnimation().getFrameIndex();
+    }
+
+    public String currentAnimationName() {
+        return currentAnimationName;
     }
 
     private IFrameByFrameAnimation getAnimation(){
-        if (currentAnimationName == null) throw new AnimagicException("You must call switchToAnimation at least once before doing anything with Animator");
+        if (currentAnimationName == null)
+            throw new AnimagicException(name + ": You must call switchToAnimation at least once before doing anything with Animator");
         for (IFrameByFrameAnimation animation : animations){
             if (animation instanceof Animation){
                 if (((Animation)animation).name().equalsIgnoreCase(currentAnimationName)) return animation;
@@ -61,6 +79,6 @@ public class Animator {
                 if (((AnimationBlend)animation).hasAnimation(currentAnimationName)) return animation;
             }
         }
-        throw new AnimagicException("This should never happen, it means the current animation name doesn't map to an animation");
+        throw new AnimagicException(name + ": This should never happen, it means the current animation name doesn't map to an animation");
     }
 }

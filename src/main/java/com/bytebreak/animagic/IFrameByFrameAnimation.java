@@ -9,4 +9,6 @@ public interface IFrameByFrameAnimation {
     int getFrameIndex();
 
     TextureRegion getFrame();
+
+    void reset();
 }
