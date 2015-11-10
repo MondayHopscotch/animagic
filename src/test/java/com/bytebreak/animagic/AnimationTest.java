@@ -180,4 +180,19 @@ public class AnimationTest {
         Assert.assertTrue(states.contains(Animation.AnimationListenerState.PINGED));
         Assert.assertTrue(states.contains(Animation.AnimationListenerState.PONGED));
     }
+
+    @Test
+    public void testAnimationListenerKEYFRAME(){
+        TextureRegion t1 = new TextureRegion();
+        TextureRegion t2 = new TextureRegion();
+        TextureRegion t3 = new TextureRegion();
+        Animation a = new Animation("name", Animation.AnimationPlayState.ONCE, 10, new TextureRegion[]{t1, t2, t3}, new int[]{2});
+        final List<Animation.AnimationListenerState> states = new ArrayList<>();
+        a.listen((self, state) -> {
+            states.add(state);
+        });
+        for (int i = 0; i < 10; i++) a.update(1);
+
+        Assert.assertTrue(states.contains(Animation.AnimationListenerState.KEYFRAME));
+    }
 }
