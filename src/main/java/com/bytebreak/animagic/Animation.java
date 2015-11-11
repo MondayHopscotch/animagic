@@ -51,15 +51,17 @@ public class Animation implements IFrameByFrameAnimation {
         return textures.length;
     }
 
+    @Override
     public void reset(){
         currentDuration = 0;
         finishedPlaying = false;
     }
 
-    public void setFrameIndex(int index){
+    public Animation setFrameIndex(int index) {
         if (index < 0) throw new AnimagicException("Cannot set the frame index to less than 0");
         if (index >= totalFrames()) throw new AnimagicException("Cannot set the frame index to more than the totalFrames(" + totalFrames() + ") - 1");
         currentDuration = (percentagePerFrame * index) * totalDuration;
+        return this;
     }
 
     @Override
@@ -123,11 +125,12 @@ public class Animation implements IFrameByFrameAnimation {
         else return currentDuration / totalDuration;
     }
 
-    public void listen(@NotNull AnimationListener listener){
+    public Animation listen(@NotNull AnimationListener listener) {
         if (listener == null){
             throw new AnimagicException("Animation listener cannot be null");
         }
         listeners.add(listener);
+        return this;
     }
 
     private void notify(AnimationListenerState listenerState){

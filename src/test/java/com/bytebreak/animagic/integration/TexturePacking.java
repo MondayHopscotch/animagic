@@ -12,7 +12,7 @@ public class TexturePacking {
         settings.filterMin = Texture.TextureFilter.Nearest;
         settings.filterMag = Texture.TextureFilter.Nearest;
         //
-        TexturePacker.process(settings, "src/test/resources/sprites/all", "src/test/resources/packed", "character");
+        TexturePacker.process(settings, "src/test/resources/sprites", "src/test/resources/packed", "character");
         System.out.println("Finished packing textures");
     }
 }
