@@ -11,40 +11,52 @@ public class Animation implements IFrameByFrameAnimation {
     private List<AnimationListener> listeners = new ArrayList<>();
     private TextureRegion[] textures;
     private int[] keyframes;
-    private float totalDuration = 0;
+    private final float totalFrameRateDuration;
+    private final float perFrameRateDuration;
     private float currentDuration = 0;
     private AnimationPlayState playState = AnimationPlayState.ONCE;
     private float playDirectionModifier = 1;
     private boolean finishedPlaying = false;
     private float percentagePerFrame;
 
-    public Animation(@NotNull String name, AnimationPlayState playState, float totalDurationSeconds, @NotNull TextureRegion[] textureArray, @NotNull int[] keyframes){
+    public Animation(@NotNull String name, AnimationPlayState playState, @NotNull FrameRate frameRate, @NotNull TextureRegion[] textureArray, @NotNull int[] keyframes) {
         if (name == null) throw new AnimagicException("Animation.name cannot be null");
         if (name.trim().equalsIgnoreCase("")) throw new AnimagicException("Animation.name cannot be ''");
+        if (frameRate == null) throw new AnimagicException("Animation.frameRate cannot be null");
         if (textureArray == null) throw new AnimagicException("Animation.textures cannot be null");
         if (textureArray.length == 0) throw new AnimagicException("Animation.textures cannot be empty");
         if (keyframes == null) throw new AnimagicException("Animation.keyframes cannot be null");
 
         this.name = name;
         this.playState = playState;
-        this.totalDuration = totalDurationSeconds;
         this.textures = textureArray;
         this.keyframes = keyframes;
 
-        if (this.totalDuration < 0) this.totalDuration = 0;
+        if (frameRate.total()) {
+            this.totalFrameRateDuration = frameRate.seconds();
+            this.perFrameRateDuration = frameRate.seconds() / textures.length;
+        } else {
+            this.totalFrameRateDuration = frameRate.seconds() * textures.length;
+            this.perFrameRateDuration = frameRate.seconds();
+        }
+
         percentagePerFrame = 1f / textures.length;
     }
 
-    public Animation(@NotNull String name, AnimationPlayState playState, float totalDurationSeconds, @NotNull TextureRegion[] textureArray){
-        this(name, playState, totalDurationSeconds, textureArray, new int[0]);
+    public Animation(@NotNull String name, AnimationPlayState playState, @NotNull FrameRate frameRate, @NotNull TextureRegion[] textureArray) {
+        this(name, playState, frameRate, textureArray, new int[0]);
     }
 
     public String name(){
         return name;
     }
 
-    public float totalDuration(){
-        return totalDuration;
+    public float totalDuration() {
+        return totalFrameRateDuration;
+    }
+
+    public float perFrameDuration() {
+        return perFrameRateDuration;
     }
 
     public int totalFrames(){
@@ -60,17 +72,17 @@ public class Animation implements IFrameByFrameAnimation {
     public Animation setFrameIndex(int index) {
         if (index < 0) throw new AnimagicException("Cannot set the frame index to less than 0");
         if (index >= totalFrames()) throw new AnimagicException("Cannot set the frame index to more than the totalFrames(" + totalFrames() + ") - 1");
-        currentDuration = (percentagePerFrame * index) * totalDuration;
+        currentDuration = (percentagePerFrame * index) * totalDuration();
         return this;
     }
 
     @Override
     public void update(float delta){
         currentDuration += delta * playDirectionModifier;
-        if (currentDuration >= totalDuration || currentDuration <= 0) {
+        if (currentDuration >= totalDuration() || currentDuration <= 0) {
             switch (playState){
                 case ONCE:
-                    currentDuration = totalDuration;
+                    currentDuration = totalDuration();
                     if (!finishedPlaying){
                         notify(AnimationListenerState.FINISHED);
                     }
@@ -82,7 +94,7 @@ public class Animation implements IFrameByFrameAnimation {
                     break;
                 case PINGPONG:
                     if (playDirectionModifier == 1){
-                        currentDuration = totalDuration;
+                        currentDuration = totalDuration();
                         notify(AnimationListenerState.PINGED);
                     } else {
                         currentDuration = 0;
@@ -121,8 +133,8 @@ public class Animation implements IFrameByFrameAnimation {
 
     public float percentComplete(){
         if (currentDuration == 0) return 0;
-        else if (currentDuration >= totalDuration) return 1;
-        else return currentDuration / totalDuration;
+        else if (currentDuration >= totalDuration()) return 1;
+        else return currentDuration / totalDuration();
     }
 
     public Animation listen(@NotNull AnimationListener listener) {

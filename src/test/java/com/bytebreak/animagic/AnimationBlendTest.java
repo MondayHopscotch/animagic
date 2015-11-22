@@ -8,9 +8,9 @@ public class AnimationBlendTest {
 
     public AnimationBlend newAnimationBlend(){
         AnimationBlend b = new AnimationBlend(3);
-        b.addAnimation(new Animation("one", Animation.AnimationPlayState.ONCE, 10, new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
-        b.addAnimation(new Animation("two", Animation.AnimationPlayState.ONCE, 15, new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
-        b.addAnimation(new Animation("three", Animation.AnimationPlayState.ONCE, 10, new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
+        b.addAnimation(new Animation("one", Animation.AnimationPlayState.ONCE, FrameRate.total(10), new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
+        b.addAnimation(new Animation("two", Animation.AnimationPlayState.ONCE, FrameRate.total(15), new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
+        b.addAnimation(new Animation("three", Animation.AnimationPlayState.ONCE, FrameRate.total(10), new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
         return b;
     }
 
@@ -24,7 +24,7 @@ public class AnimationBlendTest {
             Assert.assertTrue(e.getMessage().contains("null animation"));
         }
         try{
-            b.addAnimation(new Animation("four", Animation.AnimationPlayState.ONCE, 10, new TextureRegion[]{new TextureRegion(), new TextureRegion()}));
+            b.addAnimation(new Animation("four", Animation.AnimationPlayState.ONCE, FrameRate.total(10), new TextureRegion[]{new TextureRegion(), new TextureRegion()}));
             Assert.fail("Should have failed when animation has the wrong number of frames");
         } catch (AnimagicException e){
             Assert.assertTrue(e.getMessage().contains("frames"));

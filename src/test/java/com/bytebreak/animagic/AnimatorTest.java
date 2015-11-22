@@ -32,15 +32,15 @@ public class AnimatorTest {
             Assert.assertTrue(e.getMessage().contains("player: "));
             Assert.assertTrue(e.getMessage().contains("null animation"));
         }
-        Animation a = new Animation("run", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion()});
+        Animation a = new Animation("run", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion()});
         animator.addAnimation(a);
     }
 
     @Test
     public void testAnimatorHasAnimation() {
         Animator animator = new Animator("player");
-        animator.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion()}));
-        animator.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion()}));
+        animator.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion()}));
+        animator.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion()}));
         Assert.assertTrue(animator.hasAnimation("run"));
         Assert.assertTrue(animator.hasAnimation("walk"));
         Assert.assertFalse(animator.hasAnimation("idle"));
@@ -49,8 +49,8 @@ public class AnimatorTest {
     @Test
     public void testAnimatorMethodsBeforeSwitchAnimation() {
         Animator animator = new Animator("player");
-        animator.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion()}));
-        animator.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion()}));
+        animator.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion()}));
+        animator.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion()}));
         try {
             animator.update(1);
             Assert.fail();
@@ -80,10 +80,10 @@ public class AnimatorTest {
         TextureRegion walk2 = new TextureRegion();
         TextureRegion walk3 = new TextureRegion();
 
-        Animation a = new Animation("sprint", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{sprint1, sprint2, sprint3});
+        Animation a = new Animation("sprint", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{sprint1, sprint2, sprint3});
         AnimationBlend b = new AnimationBlend(3);
-        b.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{run1, run2, run3}));
-        b.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{walk1, walk2, walk3}));
+        b.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{run1, run2, run3}));
+        b.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{walk1, walk2, walk3}));
 
         animator.addAnimation(a);
         animator.addAnimation(b);
@@ -99,10 +99,10 @@ public class AnimatorTest {
     @Test
     public void testAnimatorGetFrameWithSwitchAnimationAndUpdate() {
         Animator animator = new Animator("player");
-        Animation a = new Animation("sprint", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()});
+        Animation a = new Animation("sprint", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()});
         AnimationBlend b = new AnimationBlend(3);
-        b.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
-        b.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, 3, new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
+        b.addAnimation(new Animation("run", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
+        b.addAnimation(new Animation("walk", Animation.AnimationPlayState.REPEAT, FrameRate.total(3), new TextureRegion[]{new TextureRegion(), new TextureRegion(), new TextureRegion()}));
 
         animator.addAnimation(a);
         animator.addAnimation(b);
