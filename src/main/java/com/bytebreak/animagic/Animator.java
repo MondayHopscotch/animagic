@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Animator {
-    private String name;
-    private List<IFrameByFrameAnimation> animations = new ArrayList<>();
+    private final String name;
+    private final List<IFrameByFrameAnimation> animations = new ArrayList<>();
     private String currentAnimationName = null;
 
     public Animator(@NotNull String name){
@@ -18,9 +18,10 @@ public class Animator {
         this.name = name;
     }
 
-    public void addAnimation(@NotNull IFrameByFrameAnimation animation){
+    public Animator addAnimation(@NotNull IFrameByFrameAnimation animation){
         if (animation == null) throw new AnimagicException(name + ": Cannot add a null animation");
         animations.add(animation);
+        return this;
     }
 
     public boolean hasAnimation(String animationName){
@@ -34,7 +35,7 @@ public class Animator {
         return false;
     }
 
-    public void switchToAnimation(String animationName){
+    public Animator switchToAnimation(String animationName){
         if (!hasAnimation(animationName))
             throw new AnimagicException(name + ": Animator does not have an animation by the name: " + animationName);
         IFrameByFrameAnimation old = null;
@@ -47,14 +48,17 @@ public class Animator {
             ((AnimationBlend)curAnimation).switchToAnimation(animationName);
             if (old != curAnimation) curAnimation.reset();
         }
+        return this;
     }
 
-    public void update(float delta){
+    public Animator update(float delta){
         getAnimation().update(delta);
+        return this;
     }
-    public void draw(SpriteBatch spriteBatch){
+    public Animator draw(SpriteBatch spriteBatch){
         // TODO: somehow the actual size of the thing must get to this point, or maybe i just return a texture region?
         spriteBatch.draw(getFrame(), 0, 0);
+        return this;
     }
 
     public TextureRegion getFrame() {
