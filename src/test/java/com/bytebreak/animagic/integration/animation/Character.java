@@ -1,4 +1,4 @@
-package com.bytebreak.animagic.integration;
+package com.bytebreak.animagic.integration.animation;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;

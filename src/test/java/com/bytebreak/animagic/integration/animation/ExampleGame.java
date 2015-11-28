@@ -1,4 +1,4 @@
-package com.bytebreak.animagic.integration;
+package com.bytebreak.animagic.integration.animation;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -6,6 +6,8 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+
+import java.lang.*;
 
 public class ExampleGame extends Game {
     AssetManager assetManager;
