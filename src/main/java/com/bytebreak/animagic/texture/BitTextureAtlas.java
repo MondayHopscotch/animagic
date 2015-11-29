@@ -1,7 +1,10 @@
 package com.bytebreak.animagic.texture;
 
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,7 +49,7 @@ public class BitTextureAtlas extends TextureAtlas {
                 if (region == null) {
                     break;
                 } else {
-                    AnimagicTextureRegion animagicRegion = new AnimagicTextureRegion(region, null);
+                    AnimagicTextureRegion animagicRegion = new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888));
                     animagicRegion.meta = loadMetaForRegion(i);
                     regions.add(region);
                 }

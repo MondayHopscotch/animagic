@@ -3,10 +3,12 @@ package com.bytebreak.animagic.integration.animation;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.bytebreak.animagic.texture.BitTextureAtlas;
+import com.bytebreak.animagic.texture.BitTextureAtlasLoader;
 
 import java.lang.*;
 
@@ -19,7 +21,9 @@ public class ExampleGame extends Game {
     @Override
     public void create() {
         assetManager = new AssetManager();
-        assetManager.load("packed/character.atlas", TextureAtlas.class);
+        assetManager.setLoader(BitTextureAtlas.class, new BitTextureAtlasLoader(new InternalFileHandleResolver()));
+
+        assetManager.load("packed/character.atlas", BitTextureAtlas.class);
         assetManager.finishLoading();
 
         character = new Character(assetManager.get("packed/character.atlas", BitTextureAtlas.class));
