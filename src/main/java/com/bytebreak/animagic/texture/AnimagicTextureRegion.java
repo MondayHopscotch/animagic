@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class AnimagicTextureRegion extends TextureRegion {
+    public AnimagicTextureData meta;
     private Texture normals;
 
     public AnimagicTextureRegion(Texture texture, Texture normals) {

@@ -6,6 +6,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.bytebreak.animagic.texture.BitTextureAtlas;
 
 import java.lang.*;
 
@@ -21,7 +22,7 @@ public class ExampleGame extends Game {
         assetManager.load("packed/character.atlas", TextureAtlas.class);
         assetManager.finishLoading();
 
-        character = new Character(assetManager.get("packed/character.atlas", TextureAtlas.class));
+        character = new Character(assetManager.get("packed/character.atlas", BitTextureAtlas.class));
 
         spriteBatch = new SpriteBatch();
     }
