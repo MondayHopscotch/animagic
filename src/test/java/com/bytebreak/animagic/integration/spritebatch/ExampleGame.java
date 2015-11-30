@@ -21,7 +21,8 @@ public class ExampleGame extends Game {
         spriteBatchA = new AnimagicSpriteBatch(camera);
         spriteBatchB = new SpriteBatch();
 
-        texture = new AnimagicTextureRegion(new Texture("textures/spark.png"), new Texture("textures/spark_n.png"));
+
+        texture = new AnimagicTextureRegion(new Texture("textures/spark.png"), new Texture("textures/spark_n.png"), 0, 0, 180, 180, -90, -90);
     }
 
     @Override
@@ -34,8 +35,13 @@ public class ExampleGame extends Game {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+
         spriteBatchA.begin();
-        spriteBatchA.setLight(0, mousePos.x, mousePos.y, 0.5f, 0.2f, 0.9f, 0.9f, 0.9f, Color.WHITE);
+        spriteBatchA.setAmbientColor(Color.WHITE);
+        spriteBatchA.setAmbientIntensity(0.3f);
+        spriteBatchA.setNextLight(mousePos.x, mousePos.y, 0.1f, 0.9f, Color.RED);
+        spriteBatchA.setNextLight(-mousePos.x, -mousePos.y, 0.5f, 1, Color.GREEN);
+
         spriteBatchA.draw(texture, 0, 0);
         spriteBatchA.end();
 
