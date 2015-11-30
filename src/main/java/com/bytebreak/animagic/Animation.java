@@ -1,7 +1,6 @@
 package com.bytebreak.animagic;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,7 @@ public class Animation implements IFrameByFrameAnimation {
     private boolean finishedPlaying = false;
     private float percentagePerFrame;
 
-    public Animation(@NotNull String name, AnimationPlayState playState, @NotNull FrameRate frameRate, @NotNull TextureRegion[] textureArray, @NotNull int[] keyframes) {
+    public Animation(String name, AnimationPlayState playState, FrameRate frameRate, TextureRegion[] textureArray, int[] keyframes) {
         if (name == null) throw new AnimagicException("Animation.name cannot be null");
         if (name.trim().equalsIgnoreCase("")) throw new AnimagicException("Animation.name cannot be ''");
         if (frameRate == null) throw new AnimagicException("Animation.frameRate cannot be null");
@@ -43,7 +42,7 @@ public class Animation implements IFrameByFrameAnimation {
         percentagePerFrame = 1f / textures.length;
     }
 
-    public Animation(@NotNull String name, AnimationPlayState playState, @NotNull FrameRate frameRate, @NotNull TextureRegion[] textureArray) {
+    public Animation(String name, AnimationPlayState playState, FrameRate frameRate, TextureRegion[] textureArray) {
         this(name, playState, frameRate, textureArray, new int[0]);
     }
 
@@ -137,7 +136,7 @@ public class Animation implements IFrameByFrameAnimation {
         else return currentDuration / totalDuration();
     }
 
-    public Animation listen(@NotNull AnimationListener listener) {
+    public Animation listen(AnimationListener listener) {
         if (listener == null){
             throw new AnimagicException("Animation listener cannot be null");
         }

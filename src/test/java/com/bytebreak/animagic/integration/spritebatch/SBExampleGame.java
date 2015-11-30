@@ -37,6 +37,7 @@ public class SBExampleGame extends Game {
 
 
         spriteBatchA.begin();
+
         spriteBatchA.setAmbientColor(Color.WHITE);
         spriteBatchA.setAmbientIntensity(0.3f);
         spriteBatchA.setNextLight(mousePos.x, mousePos.y, 0.1f, 0.9f, Color.RED);

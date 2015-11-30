@@ -1,7 +1,6 @@
 package com.bytebreak.animagic;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +22,7 @@ public class AnimationBlend implements IFrameByFrameAnimation {
         return l;
     }
 
-    public AnimationBlend addAnimation(@NotNull Animation animation) {
+    public AnimationBlend addAnimation(Animation animation) {
         if (animation == null) throw new AnimagicException("A null animation cannot be added to an AnimationBlend");
         if (frameCount != animation.totalFrames()) throw new AnimagicException("This AnimationBlend has a frame count of " + frameCount +", therefore, no animations can be added to it that do not have a total frame count of " + frameCount + " (tried one with " + animation.totalFrames() + " frames)");
         if (currentAnimationName == null) currentAnimationName = animation.name();

@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.sun.istack.internal.NotNull;
 
 public class AnimagicSpriteBatch extends SpriteBatch {
 
@@ -19,7 +18,7 @@ public class AnimagicSpriteBatch extends SpriteBatch {
     private Camera camera;
 
 
-    public AnimagicSpriteBatch(@NotNull Camera camera){
+    public AnimagicSpriteBatch(Camera camera) {
         super();
         this.setCamera(camera);
         this.setShader(createShader());
@@ -30,7 +29,7 @@ public class AnimagicSpriteBatch extends SpriteBatch {
     }
 
 
-    public AnimagicSpriteBatch setCamera(@NotNull Camera camera){
+    public AnimagicSpriteBatch setCamera(Camera camera) {
         if (camera == null) throw new RuntimeException("Cannot set the AnimagicSpriteBatch.camera with a null camera");
         this.camera = camera;
         return this;

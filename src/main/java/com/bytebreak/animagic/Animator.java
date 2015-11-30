@@ -2,7 +2,6 @@ package com.bytebreak.animagic;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.sun.istack.internal.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +11,13 @@ public class Animator {
     private final List<IFrameByFrameAnimation> animations = new ArrayList<>();
     private String currentAnimationName = null;
 
-    public Animator(@NotNull String name){
+    public Animator(String name) {
         if (name == null) throw new AnimagicException("Animator name cannot be null");
         if (name.trim().equals("")) throw new AnimagicException("Animator name cannot be empty");
         this.name = name;
     }
 
-    public Animator addAnimation(@NotNull IFrameByFrameAnimation animation){
+    public Animator addAnimation(IFrameByFrameAnimation animation) {
         if (animation == null) throw new AnimagicException(name + ": Cannot add a null animation");
         animations.add(animation);
         return this;
