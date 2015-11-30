@@ -8,7 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.bytebreak.animagic.texture.AnimagicSpriteBatch;
 import com.bytebreak.animagic.texture.AnimagicTextureRegion;
 
-public class ExampleGame extends Game {
+public class SBExampleGame extends Game {
     AnimagicSpriteBatch spriteBatchA;
     SpriteBatch spriteBatchB;
     AnimagicTextureRegion texture;
