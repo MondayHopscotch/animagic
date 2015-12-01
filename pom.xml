@@ -7,12 +7,17 @@
     <packaging>jar</packaging>
 
     <name>animagic</name>
+    <description>A libgdx-based animation configuration and management system</description>
     <version>0.1-SNAPSHOT</version>
 
     <properties>
         <gdxVersion>1.6.5</gdxVersion>
         <jacksonVersion>2.6.1</jacksonVersion>
     </properties>
+
+    <scm>
+        <url>https://github.com/Kenoshen/animagic</url>
+    </scm>
 
     <build>
         <pluginManagement>

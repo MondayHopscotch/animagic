@@ -25,26 +25,17 @@ uniform vec3 lightColor6;
 uniform vec3 lightColor7;
 uniform vec3 lightColor8;
 uniform vec3 lightColor9;
-uniform float intensity0;
-uniform float intensity1;
-uniform float intensity2;
-uniform float intensity3;
-uniform float intensity4;
-uniform float intensity5;
-uniform float intensity6;
-uniform float intensity7;
-uniform float intensity8;
-uniform float intensity9;
-uniform vec3 attenuation0;
-uniform vec3 attenuation1;
-uniform vec3 attenuation2;
-uniform vec3 attenuation3;
-uniform vec3 attenuation4;
-uniform vec3 attenuation5;
-uniform vec3 attenuation6;
-uniform vec3 attenuation7;
-uniform vec3 attenuation8;
-uniform vec3 attenuation9;
+uniform float attenuation0;
+uniform float attenuation1;
+uniform float attenuation2;
+uniform float attenuation3;
+uniform float attenuation4;
+uniform float attenuation5;
+uniform float attenuation6;
+uniform float attenuation7;
+uniform float attenuation8;
+uniform float attenuation9;
+uniform float ambientIntensity;
 uniform vec3 ambientColor;
 uniform vec2 resolution;
 uniform bool useNormals;
@@ -61,11 +52,13 @@ void main() {
     nColor.g = yInvert ? 1.0 - nColor.g : nColor.g;
 
     //this is for debugging purposes, allowing us to lower the intensity of our bump map
-    vec3 nBase = vec3(0.5, 0.5, 1.0);
+    vec3 nBase = vec3(1.0, 1.0, 1.0);
     nColor = mix(nBase, nColor, strength);
 
     //normals need to be converted to [-1.0, 1.0] range and normalized
     vec3 normal = normalize(nColor * 2.0 - 1.0);
+
+    vec4 ambient = vec4(ambientColor * ambientIntensity, 0.0);
 
     // ///////////////////////////////////////////////////
     vec3 deltaPos = vec3( (light0.xy - gl_FragCoord.xy) / resolution.xy, light0.z );
@@ -74,9 +67,9 @@ void main() {
     float lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     float d = sqrt(dot(deltaPos, deltaPos));
-    float att = useShadow ? 1.0 / ( attenuation0.x + (attenuation0.y*d) + (attenuation0.z*d*d) ) : 1.0;
+    float att = useShadow ? 1.0 / ( attenuation0 + (attenuation0*d) + (attenuation0*d*d) ) : 1.0;
 
-    vec3 result = (ambientColor * intensity0) + (lightColor0.rgb * lambert) * att;
+    vec3 result = (lightColor0.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultA = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -86,9 +79,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation1.x + (attenuation1.y*d) + (attenuation1.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation1 + (attenuation1*d) + (attenuation1*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity1) + (lightColor1.rgb * lambert) * att;
+    result = (lightColor1.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultB = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -98,9 +91,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation2.x + (attenuation2.y*d) + (attenuation2.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation2 + (attenuation2*d) + (attenuation2*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity2) + (lightColor2.rgb * lambert) * att;
+    result = (lightColor2.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultC = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -110,9 +103,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation3.x + (attenuation3.y*d) + (attenuation3.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation3 + (attenuation3*d) + (attenuation3*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity3) + (lightColor3.rgb * lambert) * att;
+    result = (lightColor3.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultD = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -122,9 +115,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation4.x + (attenuation4.y*d) + (attenuation4.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation4 + (attenuation4*d) + (attenuation4*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity4) + (lightColor4.rgb * lambert) * att;
+    result = (lightColor4.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultE = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -134,9 +127,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation5.x + (attenuation5.y*d) + (attenuation5.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation5 + (attenuation5*d) + (attenuation5*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity5) + (lightColor5.rgb * lambert) * att;
+    result = (lightColor5.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultF = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -146,9 +139,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation6.x + (attenuation6.y*d) + (attenuation6.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation6 + (attenuation6*d) + (attenuation6*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity6) + (lightColor6.rgb * lambert) * att;
+    result = (lightColor6.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultG = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -158,9 +151,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation7.x + (attenuation7.y*d) + (attenuation7.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation7 + (attenuation7*d) + (attenuation7*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity7) + (lightColor7.rgb * lambert) * att;
+    result = (lightColor7.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultH = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -170,9 +163,9 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation8.x + (attenuation8.y*d) + (attenuation8.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation8 + (attenuation8*d) + (attenuation8*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity8) + (lightColor8.rgb * lambert) * att;
+    result = (lightColor8.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultI = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
@@ -182,12 +175,12 @@ void main() {
     lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation9.x + (attenuation9.y*d) + (attenuation9.z*d*d) ) : 1.0;
+    att = useShadow ? 1.0 / ( attenuation9 + (attenuation9*d) + (attenuation9*d*d) ) : 1.0;
 
-    result = (ambientColor * intensity9) + (lightColor9.rgb * lambert) * att;
+    result = (lightColor9.rgb * lambert) * att;
     result *= color.rgb;
     vec4 resultJ = v_color * vec4(result, color.a);
     // ///////////////////////////////////////////////////
 
-    gl_FragColor = resultA + resultB + resultC + resultD + resultE + resultF + resultG + resultH + resultI + resultJ;
+    gl_FragColor = ambient + resultA + resultB + resultC + resultD + resultE + resultF + resultG + resultH + resultI + resultJ;
 }

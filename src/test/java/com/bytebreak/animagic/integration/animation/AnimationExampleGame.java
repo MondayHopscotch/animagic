@@ -10,9 +10,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.bytebreak.animagic.texture.BitTextureAtlas;
 import com.bytebreak.animagic.texture.BitTextureAtlasLoader;
 
-import java.lang.*;
-
-public class ExampleGame extends Game {
+public class AnimationExampleGame extends Game {
     AssetManager assetManager;
     SpriteBatch spriteBatch;
 

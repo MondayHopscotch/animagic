@@ -6,30 +6,35 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.sun.istack.internal.NotNull;
 
 public class AnimagicSpriteBatch extends SpriteBatch {
 
-    public final static int MAX_LIGHTS = 10;
+    public static final int MAX_LIGHTS = 10;
     private static final Color BLACK = Color.BLACK.cpy();
+    private final Light[] lights;
 
     private Camera camera;
 
 
-    public AnimagicSpriteBatch(@NotNull Camera camera){
+    public AnimagicSpriteBatch(Camera camera) {
         super();
         this.setCamera(camera);
         this.setShader(createShader());
+
+        lights = new Light[]{new Light(0), new Light(1), new Light(2), new Light(3), new Light(4), new Light(5), new Light(6), new Light(7), new Light(8), new Light(9)};
+        if (lights.length != MAX_LIGHTS)
+            throw new RuntimeException("The array of light objects cannot differ in length from the MAX_LIGHTS constant");
     }
 
-    public AnimagicSpriteBatch setCamera(@NotNull Camera camera){
+
+    public AnimagicSpriteBatch setCamera(Camera camera) {
         if (camera == null) throw new RuntimeException("Cannot set the AnimagicSpriteBatch.camera with a null camera");
         this.camera = camera;
         return this;
     }
+
 
     private ShaderProgram createShader() {
         FileHandle vertex = Gdx.files.internal("vertex.glsl");
@@ -45,41 +50,57 @@ public class AnimagicSpriteBatch extends SpriteBatch {
         program.begin();
         program.setUniformi("u_texture", 0);
         program.setUniformi("u_normals", 1);
-        program.setUniformf("strength", 1);
-        //program.setUniformf("ambientIntensity", 0.1f);
-        program.setUniformf("ambientColor", new Vector3(1f, 1f, 1f));
+        program.setUniformf("strength", 1f);
+        program.setUniformf("ambientIntensity", 0f);
+        program.setUniformf("ambientColor", new Vector3(0, 0, 0));
         program.setUniformf("resolution", new Vector2(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
-        program.setUniformi("useShadow", true ? 1 : 0);
-        program.setUniformi("useNormals", true ? 1 : 0);
-        program.setUniformi("yInvert", false ? 1 : 0);
+        program.setUniformi("useShadow", 1); // true
+        program.setUniformi("useNormals", 1); // true
+        program.setUniformi("yInvert", 0); // false
         program.end();
 
         return program;
     }
 
+
     public AnimagicSpriteBatch setAmbientColor(Color ambientColor){
+        if (ambientColor == null) throw new RuntimeException("Ambient color cannot be null");
         getShader().setUniformf("ambientColor", new Vector3(ambientColor.r, ambientColor.g, ambientColor.b));
         return this;
     }
 
-    public AnimagicSpriteBatch setLight(int index, float x, float y, float z, float intensity, float attenuationX, float attenuationY, float attenuationZ, Color color){
-        if (index < 0) throw new RuntimeException("Light index cannot be less than 0");
-        else if (index >= MAX_LIGHTS) throw new RuntimeException("Light index cannot be greater or equal to " + MAX_LIGHTS);
 
-        ShaderProgram program = getShader();
-        Vector3 p = new Vector3(x, y, z);
-        Vector3 pScreen = camera.project(p);
-        pScreen.z = z;
-        program.setUniformf("light" + index, pScreen);
-        program.setUniformf("lightColor" + index, new Vector3(color.r, color.g, color.b));
-        program.setUniformf("intensity" + index, intensity);
-        program.setUniformf("attenuation" + index, new Vector3(attenuationX, attenuationY, attenuationZ));
+    public AnimagicSpriteBatch setAmbientIntensity(float ambientIntensity) {
+        getShader().setUniformf("ambientIntensity", Math.min(1, Math.max(0, ambientIntensity)));
         return this;
     }
 
-    private void setLightsToDefault(){
+
+    public AnimagicSpriteBatch setLight(int index, float x, float y, float z, float attenuation, Color color) {
+        if (index < 0) throw new RuntimeException("Light index cannot be less than 0");
+        else if (index >= MAX_LIGHTS) throw new RuntimeException("Light index cannot be greater or equal to " + MAX_LIGHTS);
+        else if (color == null) throw new RuntimeException("Light[" + index + "] color cannot be null");
+        Light l = lights[index];
+        l.position(x, y, z);
+        l.attenuation(attenuation);
+        l.color(color);
+        return this;
+    }
+
+    public AnimagicSpriteBatch setNextLight(float x, float y, float z, float attenuation, Color color) {
+        for (int i = 0; i < MAX_LIGHTS; i++) {
+            if (!lights[i].isDirty()) return setLight(i, x, y, z, attenuation, color);
+        }
+        return this;
+    }
+
+
+    private void resetLights() {
         for (int i = 0; i < MAX_LIGHTS; i++){
-            setLight(i, 0, 0, 0, 0, 0, 0, 0, Color.BLACK);
+            if (lights[i].isDirty()) {
+                setLight(i, 0, 0, 0, 0, BLACK);
+                lights[i].resetDirty();
+            }
         }
     }
 
@@ -87,45 +108,105 @@ public class AnimagicSpriteBatch extends SpriteBatch {
     public void begin() {
         setProjectionMatrix(camera.combined);
         super.begin();
-        setLightsToDefault();
+        resetLights();
     }
 
-    private void preDraw(AnimagicTextureRegion region){
+
+    private Vector2 preDraw(AnimagicTextureRegion region, float x, float y) {
         if (region.getNormalTexture() != null) {
             this.flush();
             region.getNormalTexture().bind(1);
         }
         region.getTexture().bind(0);
+        Vector2 offset = region.getOffset();
+        offset.add(x, y);
+        return offset;
     }
 
+
     public void draw(AnimagicTextureRegion region, float x, float y) {
-        preDraw(region);
-        super.draw(region, x, y);
+        Vector2 pos = preDraw(region, x, y);
+        super.draw(region, pos.x, pos.y);
     }
 
 
     public void draw(AnimagicTextureRegion region, float x, float y, float width, float height) {
-        preDraw(region);
-        super.draw(region, x, y, width, height);
+        Vector2 pos = preDraw(region, x, y);
+        super.draw(region, pos.x, pos.y, width, height);
     }
 
 
     public void draw(AnimagicTextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation) {
-        preDraw(region);
-        super.draw(region, x, y, originX, originY, width, height, scaleX, scaleY, rotation);
+        Vector2 pos = preDraw(region, x, y);
+        super.draw(region, pos.x, pos.y, originX, originY, width, height, scaleX, scaleY, rotation);
     }
 
 
     public void draw(AnimagicTextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, boolean clockwise) {
-        preDraw(region);
-        super.draw(region, x, y, originX, originY, width, height, scaleX, scaleY, rotation, clockwise);
+        Vector2 pos = preDraw(region, x, y);
+        super.draw(region, pos.x, pos.y, originX, originY, width, height, scaleX, scaleY, rotation, clockwise);
     }
 
 
-    public void draw(AnimagicTextureRegion region, float width, float height, Affine2 transform) {
-        preDraw(region);
-        super.draw(region, width, height, transform);
+    public class Light {
+        private float x = 0;
+        private float y = 0;
+        private float z = 0;
+        private float attenuation = 0;
+        private float r = 0;
+        private float g = 0;
+        private float b = 0;
+
+        private boolean dirty = false;
+        public final int index;
+
+        protected Light(int index) {
+            this.index = index;
+        }
+
+        public Light position(float x, float y, float z) {
+            if (this.x != x || this.y != y || this.z != z) {
+                dirty = true;
+                Vector3 p = new Vector3(x, y, z);
+                Vector3 pScreen = camera.project(p);
+                pScreen.z = z;
+                getShader().setUniformf("light" + index, pScreen);
+            }
+            return this;
+        }
+
+        public Light attenuation(float attenuation) {
+            if (this.attenuation != attenuation) {
+                dirty = true;
+                this.attenuation = attenuation;
+                getShader().setUniformf("attenuation" + index, this.attenuation);
+            }
+            return this;
+        }
+
+        public Light color(float r, float g, float b) {
+            if (this.r != r || this.g != g || this.b != b) {
+                dirty = true;
+                this.r = r;
+                this.g = g;
+                this.b = b;
+                getShader().setUniformf("lightColor" + index, new Vector3(this.r, this.g, this.b));
+            }
+            return this;
+        }
+
+        public Light color(Color color) {
+            return color(color.r, color.g, color.b);
+        }
+
+        public boolean isDirty() {
+            return dirty;
+        }
+
+        public Light resetDirty() {
+            this.dirty = false;
+            return this;
+        }
+
     }
-
-
 }
