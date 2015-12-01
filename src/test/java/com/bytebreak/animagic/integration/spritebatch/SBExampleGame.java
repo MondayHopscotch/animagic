@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.bytebreak.animagic.texture.AnimagicSpriteBatch;
+import com.bytebreak.animagic.texture.AnimagicTextureData;
 import com.bytebreak.animagic.texture.AnimagicTextureRegion;
 
 public class SBExampleGame extends Game {
@@ -22,7 +23,9 @@ public class SBExampleGame extends Game {
         spriteBatchB = new SpriteBatch();
 
 
-        texture = new AnimagicTextureRegion(new Texture("textures/spark.png"), new Texture("textures/spark_n.png"), 0, 0, 180, 180, -90, -90);
+        texture = new AnimagicTextureRegion(new Texture("textures/spark.png"), new Texture("textures/spark_n.png"), 0, 0, 180, 180);
+        texture.meta.xOffset = -90;
+        texture.meta.yOffset = -90;
     }
 
     @Override
