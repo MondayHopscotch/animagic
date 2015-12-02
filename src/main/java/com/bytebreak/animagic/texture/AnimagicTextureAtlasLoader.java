@@ -14,14 +14,14 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.Iterator;
 
-public class BitTextureAtlasLoader extends SynchronousAssetLoader<BitTextureAtlas, BitTextureAtlasLoader.BitTextureAtlasParameter> {
+public class AnimagicTextureAtlasLoader extends SynchronousAssetLoader<AnimagicTextureAtlas, AnimagicTextureAtlasLoader.BitTextureAtlasParameter> {
     TextureAtlasData data;
 
-    public BitTextureAtlasLoader(FileHandleResolver resolver) {
+    public AnimagicTextureAtlasLoader(FileHandleResolver resolver) {
         super(resolver);
     }
 
-    public BitTextureAtlas load(AssetManager assetManager, String fileName, FileHandle file, BitTextureAtlasLoader.BitTextureAtlasParameter parameter) {
+    public AnimagicTextureAtlas load(AssetManager assetManager, String fileName, FileHandle file, AnimagicTextureAtlasLoader.BitTextureAtlasParameter parameter) {
         Page page;
         Texture texture;
         for(Iterator var5 = this.data.getPages().iterator(); var5.hasNext(); page.texture = texture) {
@@ -29,10 +29,10 @@ public class BitTextureAtlasLoader extends SynchronousAssetLoader<BitTextureAtla
             texture = (Texture)assetManager.get(page.textureFile.path().replaceAll("\\\\", "/"), Texture.class);
         }
 
-        return new BitTextureAtlas(this.data, file);
+        return new AnimagicTextureAtlas(this.data, file);
     }
 
-    public Array<AssetDescriptor> getDependencies(String fileName, FileHandle atlasFile, BitTextureAtlasLoader.BitTextureAtlasParameter parameter) {
+    public Array<AssetDescriptor> getDependencies(String fileName, FileHandle atlasFile, AnimagicTextureAtlasLoader.BitTextureAtlasParameter parameter) {
         FileHandle imgDir = atlasFile.parent();
         if(parameter != null) {
             this.data = new TextureAtlasData(atlasFile, imgDir, parameter.flip);
@@ -56,7 +56,7 @@ public class BitTextureAtlasLoader extends SynchronousAssetLoader<BitTextureAtla
         return dependencies;
     }
 
-    public static class BitTextureAtlasParameter extends AssetLoaderParameters<BitTextureAtlas> {
+    public static class BitTextureAtlasParameter extends AssetLoaderParameters<AnimagicTextureAtlas> {
         public boolean flip = false;
 
         public BitTextureAtlasParameter() {

@@ -3,10 +3,9 @@ package com.bytebreak.animagic.integration.animation;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.bytebreak.animagic.*;
-import com.bytebreak.animagic.texture.BitTextureAtlas;
+import com.bytebreak.animagic.texture.AnimagicTextureAtlas;
 
 public class Character implements AnimationListener {
     float x = 0;
@@ -20,7 +19,7 @@ public class Character implements AnimationListener {
 
     String[] combos = new String[]{"kick", "thrust", "bash", "cut", "slash", "smash"};
 
-    public Character(BitTextureAtlas atlas) {
+    public Character(AnimagicTextureAtlas atlas) {
         animator = new Animator("character");
 
         animator.addAnimation(new Animation("kick", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegionsWithMeta("kick").toArray(TextureRegion.class), new int[]{6}).listen(this));

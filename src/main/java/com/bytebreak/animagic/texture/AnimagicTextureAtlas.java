@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 /**
  * Created by Monday on 11/12/2015.
  */
-public class BitTextureAtlas extends TextureAtlas {
+public class AnimagicTextureAtlas extends TextureAtlas {
     final static Pattern lastIntPattern = Pattern.compile("[^0-9]+([0-9]+)$");
 
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -33,7 +33,7 @@ public class BitTextureAtlas extends TextureAtlas {
     private FileHandle atlasFile;
     private AnimagicAnimationData metaFile;
 
-    public BitTextureAtlas(TextureAtlasData data, FileHandle file) {
+    public AnimagicTextureAtlas(TextureAtlasData data, FileHandle file) {
         super(data);
         atlasFile = file;
     }

@@ -6,7 +6,7 @@ import com.badlogic.gdx.tools.texturepacker.TexturePacker;
 import java.io.*;
 import java.nio.channels.FileChannel;
 
-public class BitTexturePacker {
+public class AnimagicTexturePacker {
 
     FileFilter directoryFilter = new FileFilter() {
         @Override
@@ -26,7 +26,7 @@ public class BitTexturePacker {
     private File outputDir;
     private File metaDir;
 
-    public BitTexturePacker(File inputDir, File outputDir) {
+    public AnimagicTexturePacker(File inputDir, File outputDir) {
         this.inputDir = inputDir;
         this.outputDir = outputDir;
         metaDir = new File(outputDir, "meta");
@@ -130,7 +130,7 @@ public class BitTexturePacker {
             System.err.println(args[1] + " must be a directory");
         }
 
-        BitTexturePacker packer = new BitTexturePacker(inputDir, outputDir);
+        AnimagicTexturePacker packer = new AnimagicTexturePacker(inputDir, outputDir);
         packer.pack();
     }
 }

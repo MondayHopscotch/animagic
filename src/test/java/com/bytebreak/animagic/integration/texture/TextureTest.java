@@ -17,9 +17,9 @@ public class TextureTest extends Game {
     @Override
     public void create() {
         assetManager = new AssetManager();
-        assetManager.setLoader(BitTextureAtlas.class, new BitTextureAtlasLoader(new InternalFileHandleResolver()));
+        assetManager.setLoader(AnimagicTextureAtlas.class, new AnimagicTextureAtlasLoader(new InternalFileHandleResolver()));
 
-        assetManager.load("packed/character.atlas", BitTextureAtlas.class);
+        assetManager.load("packed/character.atlas", AnimagicTextureAtlas.class);
         assetManager.finishLoading();
 
         saveTestMeta();
@@ -31,7 +31,7 @@ public class TextureTest extends Game {
 
     public void saveTestMeta() {
         AnimagicAnimationData animationData = new AnimagicAnimationData();
-        BitTextureAtlas atlas = assetManager.get("packed/character.atlas", BitTextureAtlas.class);
+        AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
         Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithoutMeta("kick");
         for (int i = 0; i < kickFrames.size; i++) {
             AnimagicTextureData frameMeta = new AnimagicTextureData();
@@ -43,7 +43,7 @@ public class TextureTest extends Game {
     }
 
     public void loadTestMetaAllFrames() {
-        BitTextureAtlas atlas = assetManager.get("packed/character.atlas", BitTextureAtlas.class);
+        AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
         Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithMeta("kick");
         for (int i = 0; i < kickFrames.size; i++) {
             AnimagicTextureRegion frame = kickFrames.get(i);
@@ -59,7 +59,7 @@ public class TextureTest extends Game {
     public void loadTestMetaOneFrame() {
         int frameNumber = 5;
         int offset = frameNumber - 1;
-        BitTextureAtlas atlas = assetManager.get("packed/character.atlas", BitTextureAtlas.class);
+        AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
         Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithMeta("kick/" + frameNumber);
         for (int i = 0; i < kickFrames.size; i++) {
             AnimagicTextureRegion frame = kickFrames.get(i);
