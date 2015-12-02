@@ -9,10 +9,10 @@ import com.bytebreak.animagic.utils.FileUtils;
 import com.bytebreak.animagic.texture.*;
 
 /**
+ * Test class for Animation Metadata. Done inside a Game instance to make use of the assetManager
  * Created by Monday on 11/30/2015.
  */
 public class TextureTest extends Game {
-    public static final String ASSET_DIR = "sprites";
     AssetManager assetManager;
     @Override
     public void create() {

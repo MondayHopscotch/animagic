@@ -6,8 +6,15 @@ import com.badlogic.gdx.tools.texturepacker.TexturePacker;
 import java.io.*;
 import java.nio.channels.FileChannel;
 
+/**
+ * Texture packer that is designed to pack images and also copy meta files.
+ * @author MondayHopscotch
+ */
 public class AnimagicTexturePacker {
 
+    /**
+     * filter to only return directories
+     */
     FileFilter directoryFilter = new FileFilter() {
         @Override
         public boolean accept(File pathname) {
@@ -15,6 +22,9 @@ public class AnimagicTexturePacker {
         }
     };
 
+    /**
+     * filter to only return meta files
+     */
     FileFilter metaFilter = new FileFilter() {
         @Override
         public boolean accept(File pathname) {
@@ -92,8 +102,8 @@ public class AnimagicTexturePacker {
         }
     }
 
-    public static void copyFile(final File sourceFile, final File destFile) throws IOException {
-        System.out.println("Copying \n\t" + sourceFile.getAbsolutePath() + "\n to \n\t" + destFile.getAbsolutePath());
+    public void copyFile(final File sourceFile, final File destFile) throws IOException {
+        System.out.println("Copying meta file: " + sourceFile.getPath().substring(inputDir.getPath().length()));
         if (!destFile.exists())
         {
             destFile.createNewFile();

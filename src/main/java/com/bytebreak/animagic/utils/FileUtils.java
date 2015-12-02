@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 
 /**
+ * Simple utility class that allows objects to be saved to file / loaded from file via JSON.
  * @author MondayHopscotch
  */
 public class FileUtils {
@@ -75,15 +76,6 @@ public class FileUtils {
         return null;
     }
 
-    public static <T> T loadFileAs(Class<T> clazz) {
-        String file = loadFile();
-        if (file == null || file.length() <= 0) {
-            return null;
-        } else {
-            return loadFileAs(clazz, file);
-        }
-    }
-
     public static <T> T loadFileAs(Class<T> clazz, File file) {
         return loadFileAs(clazz, loadFile(file));
     }
@@ -95,18 +87,6 @@ public class FileUtils {
             e.printStackTrace();
             return null;
         }
-    }
-
-    public static String loadFile() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setApproveButtonText("Load");
-        fileChooser.setCurrentDirectory(new File("."));
-
-        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            return loadFile(selectedFile);
-        }
-        return null;
     }
 
     public static String loadFile(File file) {
@@ -136,5 +116,4 @@ public class FileUtils {
         }
         return null;
     }
-
 }
