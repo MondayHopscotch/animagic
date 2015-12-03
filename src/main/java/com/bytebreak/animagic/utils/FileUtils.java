@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.*;
 public class FileUtils {
 
     private static String nextSaveDir = null;
+    private static String lastDirectory = null;
 
     private static final ObjectMapper mapper = new ObjectMapper();
     static {
@@ -113,6 +114,30 @@ public class FileUtils {
                 } catch (IOException e) {
                 }
             }
+        }
+        return null;
+    }
+
+    public static String selectDirectory() {
+        if (lastDirectory == null) {
+            lastDirectory = ".";
+        }
+        JFileChooser fileChooser = new JFileChooser(lastDirectory) {
+            @Override
+            protected JDialog createDialog(Component parent) throws HeadlessException {
+                JDialog dialog = super.createDialog(parent);
+                dialog.setAlwaysOnTop(true);
+                dialog.setModalityType(ModalityType.APPLICATION_MODAL);
+                dialog.setModal(true);
+                return dialog;
+            }
+        };
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setDialogTitle("Select Directory");
+        fileChooser.setApproveButtonText("Select");
+        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            lastDirectory = fileChooser.getSelectedFile().getPath();
+            return lastDirectory;
         }
         return null;
     }
