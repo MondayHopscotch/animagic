@@ -1,6 +1,9 @@
 package com.bytebreak.animagic;
 
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.bytebreak.animagic.texture.AnimagicTextureRegion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +11,7 @@ import java.util.List;
 public class Animation implements IFrameByFrameAnimation {
     private String name;
     private List<AnimationListener> listeners = new ArrayList<>();
-    private TextureRegion[] textures;
+    private AnimagicTextureRegion[] textures;
     private int[] keyframes;
     private final float totalFrameRateDuration;
     private final float perFrameRateDuration;
@@ -28,7 +31,16 @@ public class Animation implements IFrameByFrameAnimation {
 
         this.name = name;
         this.playState = playState;
-        this.textures = textureArray;
+
+        List<AnimagicTextureRegion> animTextures = new ArrayList<>();
+        for (TextureRegion region : textureArray) {
+            if (region instanceof AnimagicTextureRegion) {
+                animTextures.add((AnimagicTextureRegion) region);
+            } else {
+                animTextures.add(new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888)));
+            }
+        }
+        this.textures = animTextures.toArray(new AnimagicTextureRegion[animTextures.size()]);
         this.keyframes = keyframes;
 
         if (frameRate.total()) {
@@ -126,7 +138,7 @@ public class Animation implements IFrameByFrameAnimation {
     }
 
     @Override
-    public TextureRegion getFrame(){
+    public AnimagicTextureRegion getFrame(){
         return textures[getFrameIndex()];
     }
 
@@ -134,6 +146,10 @@ public class Animation implements IFrameByFrameAnimation {
         if (currentDuration == 0) return 0;
         else if (currentDuration >= totalDuration()) return 1;
         else return currentDuration / totalDuration();
+    }
+
+    public AnimagicTextureRegion[] getAllFrames() {
+        return textures;
     }
 
     public Animation listen(AnimationListener listener) {

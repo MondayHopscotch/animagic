@@ -4,24 +4,31 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
+import com.bytebreak.animagic.Animation;
+import com.bytebreak.animagic.FrameRate;
+import com.bytebreak.animagic.texture.AnimagicAnimationData;
+import com.bytebreak.animagic.texture.AnimagicTextureRegion;
 import com.bytebreak.animagic.utils.FileUtils;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.*;
 
 /**
  * Created by Monday on 12/2/2015.
@@ -46,10 +53,13 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     private final SpriteBatch batch;
 
-    private final TextureRegion testTexture;
+    private Actor animationPanel;
+    private Animation currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new TextureRegion[] {new TextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888))});
+
+    private TextureRegion testTexture;
 
     public EditorScreen() {
-        camera = new OrthographicCamera(800, 600);
+        camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch = new SpriteBatch(1);
 
         testTexture = new TextureRegion(new Texture(Gdx.files.internal("skins/ui.png")));
@@ -64,8 +74,8 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     private void setInputControls() {
         InputMultiplexer inputMux = new InputMultiplexer();
-        inputMux.addProcessor(stage);
         inputMux.addProcessor(this);
+        inputMux.addProcessor(stage);
         Gdx.input.setInputProcessor(inputMux);
     }
 
@@ -78,10 +88,40 @@ public class EditorScreen extends InputAdapter implements Screen {
     }
 
     private void buildUI() {
+        maybeLoadTexture();
         stage.clear();
         buildAnimationPanel();
         buildFrameScrollPanel();
         buildLoadSavePanel();
+    }
+
+    private void maybeLoadTexture() {
+        Animation newAnimation;
+        java.util.List<AnimagicTextureRegion> frames = new ArrayList<>();
+        if (currentAnimationDir != null) {
+            File animationDir = new File(currentAnimationDir);
+            if (animationDir.exists() && animationDir.isDirectory()) {
+                for (File imageFile :animationDir.listFiles(pngFilter)){
+                    frames.add(new AnimagicTextureRegion(new TextureRegion(new Texture(Gdx.files.absolute(imageFile.getAbsolutePath()))), new Texture(0, 0, Pixmap.Format.RGBA8888)));
+                }
+                File metaFile = new File(animationDir, "meta");
+                if (metaFile.exists()) {
+                    AnimagicAnimationData metaData = FileUtils.loadFileAs(AnimagicAnimationData.class, metaFile);
+                    for (int i = 0; i < frames.size(); i++) {
+                        if (metaData.frameData.size() > i) {
+                            frames.get(i).meta = metaData.frameData.get(i);
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("Found " + frames.size() + " frames");
+        if (frames.size() > 0) {
+            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), frames.toArray(new TextureRegion[frames.size()]));
+        } else {
+            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new TextureRegion[] {new TextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888))});
+        }
+        currentAnimation = newAnimation;
     }
 
     private void buildLoadSavePanel() {
@@ -148,10 +188,9 @@ public class EditorScreen extends InputAdapter implements Screen {
         buttonGroup.setMaxCheckCount(1);
         buttonGroup.setMinCheckCount(1);
 
-        if (currentAnimationDir != null) {
-            for (File imageFile : new File(currentAnimationDir).listFiles(pngFilter)) {
+            for (TextureRegion frame : currentAnimation.getAllFrames()) {
                 Table itemTable = new Table();
-                TextureRegionDrawable upDrawable = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.absolute(imageFile.getAbsolutePath()))));
+                TextureRegionDrawable upDrawable = new TextureRegionDrawable(frame);
                 SpriteDrawable downSprite = upDrawable.tint(Color.GREEN);
                 ImageButton button = new ImageButton(upDrawable, downSprite, downSprite);
                 buttonGroup.add(button);
@@ -160,7 +199,6 @@ public class EditorScreen extends InputAdapter implements Screen {
 
                 menu.add(itemTable).padRight(20);
             }
-        }
         menu.padBottom(-20);
 
         stage.addActor(parentMenu);
@@ -176,18 +214,18 @@ public class EditorScreen extends InputAdapter implements Screen {
         menu.setSize(200, 300);
 
         Table itemTable = new Table();
-        TextButton button = new TextButton("hello", skin, "button");
-        itemTable.add(button);
-        itemTable.row();
-        Label label = new Label("hello label", skin);
-        itemTable.add(label).padBottom(20);
+        TextButton button = new TextButton("", skin, "button");
+        itemTable.add(button).width(200).height(300);
 
-        menu.add(itemTable).padRight(20);
+        animationPanel = button;
+
+        menu.add(itemTable);
         menu.row();
         menu.padBottom(-20);
         parentMenu.add(menu);
 
         stage.addActor(parentMenu);
+        System.out.println(button.localToStageCoordinates(new Vector2(0, 0)));
     }
 
     @Override
@@ -195,15 +233,31 @@ public class EditorScreen extends InputAdapter implements Screen {
         Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        camera.position.set(-200, -50, 0);
-        camera.update();
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-        batch.draw(testTexture, 0, 0);
-        batch.end();
-
         stage.act(delta);
         stage.draw();
+
+        if (animationPanel != null) {
+            Vector2 center = new Vector2(Gdx.graphics.getWidth(), 0);
+            Vector2 size = new Vector2(animationPanel.getWidth(), animationPanel.getHeight());
+            center.sub(animationPanel.localToStageCoordinates(new Vector2(0, 0)).sub(size.scl(.5f)));
+
+            camera.position.set(-1 * (center.x), -1 * (center.y), 0);
+            camera.update();
+            batch.setProjectionMatrix(camera.combined);
+            Rectangle scissors = new Rectangle();
+            Rectangle clipBounds = new Rectangle(-100, -150, 200, 300);
+            ScissorStack.calculateScissors(camera, batch.getTransformMatrix(), clipBounds, scissors);
+            ScissorStack.pushScissors(scissors);
+            currentAnimation.update(delta);
+
+            batch.begin();
+            AnimagicTextureRegion frame = currentAnimation.getFrame();
+            batch.draw(frame, frame.meta.xOffset, frame.meta.yOffset);
+            batch.flush();
+            batch.end();
+            ScissorStack.popScissors();
+        }
+
     }
 
     @Override
@@ -229,5 +283,11 @@ public class EditorScreen extends InputAdapter implements Screen {
     @Override
     public void dispose() {
 
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        System.out.println(camera.unproject(new Vector3(screenX, screenY, 0)));
+        return false;
     }
 }
