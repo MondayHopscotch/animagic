@@ -63,6 +63,9 @@ public class EditorScreen extends InputAdapter implements Screen {
     private Actor scrollPanel;
     private Actor buttonPanel;
 
+    private Rectangle animatorPanelArea = new Rectangle();
+    private Rectangle editorPanelArea = new Rectangle();
+
     private Animation currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new TextureRegion[] {new TextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888))});
 
     public EditorScreen() {
@@ -295,6 +298,7 @@ public class EditorScreen extends InputAdapter implements Screen {
         Rectangle clipBounds = new Rectangle(-halfSize.x, -halfSize.y, size.x, size.y);
         ScissorStack.calculateScissors(animationCamera, batch.getTransformMatrix(), clipBounds, scissors);
         ScissorStack.pushScissors(scissors);
+        animatorPanelArea.set(scissors);
         currentAnimation.update(delta);
 
         batch.begin();
@@ -323,31 +327,29 @@ public class EditorScreen extends InputAdapter implements Screen {
         cameraAreaSize.y = Math.abs(buttonPanelLoc.y - scrollPanelLoc.y); // distance from top of scroll panel to bottom of button panel
         cameraAreaSize.x = Math.abs(animatorPanelLoc.x);
 
-        System.out.println("Edit Panel Size: " + cameraAreaSize);
+//        System.out.println("Edit Panel Size: " + cameraAreaSize);
 
 
         Vector2 regionCamCenterPoint = new Vector2(0, 0);
         regionCamCenterPoint.x = cameraAreaSize.x / 2; // this camera is rendering up against the left side of the screen
         regionCamCenterPoint.y = scrollPanel.getHeight() + cameraAreaSize.y/2;
 
-        System.out.println("Cam origin location: " + regionCamCenterPoint);
+//        System.out.println("Cam origin location: " + regionCamCenterPoint);
 
         Vector2 texturePanelLocation = new Vector2(-1 * (Gdx.graphics.getWidth()/2 - regionCamCenterPoint.x), -1 * (Gdx.graphics.getHeight()/2 - regionCamCenterPoint.y));
 
         textureEditCamera.position.set(-1 * texturePanelLocation.x, -1 * texturePanelLocation.y, 0);
         textureEditCamera.update();
-//        textureEditCamera.position.set(0,0,0);
-//        textureEditCamera.update();
         batch.setProjectionMatrix(textureEditCamera.combined);
         Rectangle scissors = new Rectangle();
         Rectangle clipBounds = new Rectangle(-cameraAreaSize.x/2, -cameraAreaSize.y/2, cameraAreaSize.x, cameraAreaSize.y);
         ScissorStack.calculateScissors(textureEditCamera, batch.getTransformMatrix(), clipBounds, scissors);
         ScissorStack.pushScissors(scissors);
-        currentAnimation.update(delta);
+
+        editorPanelArea.set(scissors);
 
         batch.begin();
-        AnimagicTextureRegion frame = currentAnimation.getFrame();
-        batch.draw(frame, frame.meta.xOffset, frame.meta.yOffset);
+        batch.draw(selectedRegion, selectedRegion.meta.xOffset, selectedRegion.meta.yOffset);
         batch.flush();
         batch.end();
         ScissorStack.popScissors();
@@ -356,9 +358,6 @@ public class EditorScreen extends InputAdapter implements Screen {
         shaper.begin(ShapeRenderer.ShapeType.Line);
         shaper.setColor(Color.WHITE);
         shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
-        for (int i = 0; i < 1000; i+=100) {
-            shaper.circle(0, 0, i);
-        }
         shaper.setColor(Color.PINK);
         shaper.circle(0, 0, 1);
         shaper.end();
@@ -391,6 +390,12 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (editorPanelArea.contains(screenX, Gdx.graphics.getHeight() - screenY)) {
+            System.out.println("CLICKED THE EDITOR");
+        }
+        if (animatorPanelArea.contains(screenX, Gdx.graphics.getHeight() - screenY)) {
+            System.out.println("CLICKED THE ANIMATOR");
+        }
         System.out.println(animationCamera.unproject(new Vector3(screenX, screenY, 0)));
         return false;
     }
