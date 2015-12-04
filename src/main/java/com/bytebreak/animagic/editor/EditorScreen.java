@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -28,6 +29,7 @@ import com.bytebreak.animagic.utils.FileUtils;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -46,23 +48,23 @@ public class EditorScreen extends InputAdapter implements Screen {
     };
 
     private String currentAnimationDir = null;
+    private AnimagicTextureRegion selectedRegion = null;
 
     OrthographicCamera camera;
     private final Stage stage;
     private final Skin skin;
 
     private final SpriteBatch batch;
+    private final ShapeRenderer shaper;
+
 
     private Actor animationPanel;
     private Animation currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new TextureRegion[] {new TextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888))});
 
-    private TextureRegion testTexture;
-
     public EditorScreen() {
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch = new SpriteBatch(1);
-
-        testTexture = new TextureRegion(new Texture(Gdx.files.internal("skins/ui.png")));
+        shaper = new ShapeRenderer();
 
         TextureAtlas menuAtlas = new TextureAtlas(Gdx.files.internal("skins/ui.atlas"));
         stage = new Stage();
@@ -92,7 +94,7 @@ public class EditorScreen extends InputAdapter implements Screen {
         stage.clear();
         buildAnimationPanel();
         buildFrameScrollPanel();
-        buildLoadSavePanel();
+        buildButtons();
     }
 
     private void maybeLoadTexture() {
@@ -124,7 +126,7 @@ public class EditorScreen extends InputAdapter implements Screen {
         currentAnimation = newAnimation;
     }
 
-    private void buildLoadSavePanel() {
+    private void buildButtons() {
         Table parentMenu = new Table();
         parentMenu.setFillParent(true);
         parentMenu.setOrigin(Align.topLeft);
@@ -134,7 +136,6 @@ public class EditorScreen extends InputAdapter implements Screen {
 
         Table itemTable = new Table();
         TextButton loadButton = new TextButton("load", skin, "button");
-        itemTable.add(loadButton);
 
         loadButton.addListener(new ClickListener() {
             @Override
@@ -149,13 +150,34 @@ public class EditorScreen extends InputAdapter implements Screen {
         });
 
         TextButton saveButton = new TextButton("save", skin, "button");
-        itemTable.add(saveButton);
         saveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 System.out.println("SAVING");
+                if (currentAnimationDir != null) {
+                    AnimagicAnimationData animationData = new AnimagicAnimationData();
+                    for (AnimagicTextureRegion frame : currentAnimation.getAllFrames()) {
+                        animationData.frameData.add(frame.meta);
+                    }
+                    FileUtils.saveToFile(animationData, Paths.get(currentAnimationDir, "meta").toString());
+                }
             }
         });
+
+        TextButton centerButton = new TextButton("center", skin, "button");
+        centerButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                for(AnimagicTextureRegion frame : currentAnimation.getAllFrames()) {
+                    frame.meta.xOffset = -frame.getRegionWidth()/2;
+                    frame.meta.yOffset = -frame.getRegionHeight()/2;
+                }
+            }
+        });
+
+        itemTable.add(loadButton);
+        itemTable.add(saveButton).padRight(10);
+        itemTable.add(centerButton);
 
         menu.add(itemTable);
         menu.padBottom(-20);
@@ -194,7 +216,7 @@ public class EditorScreen extends InputAdapter implements Screen {
                 SpriteDrawable downSprite = upDrawable.tint(Color.GREEN);
                 ImageButton button = new ImageButton(upDrawable, downSprite, downSprite);
                 buttonGroup.add(button);
-                itemTable.add(button).padBottom(40).padTop(20);
+                itemTable.add(button).width(64).height(64).padBottom(40).padTop(20);
                 itemTable.row();
 
                 menu.add(itemTable).padRight(20);
@@ -208,20 +230,20 @@ public class EditorScreen extends InputAdapter implements Screen {
         Table parentMenu = new Table();
         parentMenu.setFillParent(true);
         parentMenu.setOrigin(Align.topRight);
-        parentMenu.align(Align.right);
+        parentMenu.align(Align.topRight);
 
         Table menu = new Table();
         menu.setSize(200, 300);
 
         Table itemTable = new Table();
         TextButton button = new TextButton("", skin, "button");
-        itemTable.add(button).width(200).height(300);
+        itemTable.add(button).width(200).height(300).padBottom(20);
 
         animationPanel = button;
 
         menu.add(itemTable);
         menu.row();
-        menu.padBottom(-20);
+//        menu.padBottom(-20);
         parentMenu.add(menu);
 
         stage.addActor(parentMenu);
@@ -237,15 +259,16 @@ public class EditorScreen extends InputAdapter implements Screen {
         stage.draw();
 
         if (animationPanel != null) {
-            Vector2 center = new Vector2(Gdx.graphics.getWidth(), 0);
+            Vector2 cameraLoc = new Vector2(Gdx.graphics.getWidth(), 0);
             Vector2 size = new Vector2(animationPanel.getWidth(), animationPanel.getHeight());
-            center.sub(animationPanel.localToStageCoordinates(new Vector2(0, 0)).sub(size.scl(.5f)));
+            Vector2 halfSize = new Vector2(size).scl(.5f);
+            cameraLoc.sub(animationPanel.localToStageCoordinates(new Vector2(0, 0)).sub(halfSize));
 
-            camera.position.set(-1 * (center.x), -1 * (center.y), 0);
+            camera.position.set(-1 * (cameraLoc.x), 1 * (cameraLoc.y), 0);
             camera.update();
             batch.setProjectionMatrix(camera.combined);
             Rectangle scissors = new Rectangle();
-            Rectangle clipBounds = new Rectangle(-100, -150, 200, 300);
+            Rectangle clipBounds = new Rectangle(-halfSize.x, -halfSize.y, size.x, size.y);
             ScissorStack.calculateScissors(camera, batch.getTransformMatrix(), clipBounds, scissors);
             ScissorStack.pushScissors(scissors);
             currentAnimation.update(delta);
@@ -256,6 +279,14 @@ public class EditorScreen extends InputAdapter implements Screen {
             batch.flush();
             batch.end();
             ScissorStack.popScissors();
+
+            shaper.setProjectionMatrix(camera.combined);
+            shaper.begin(ShapeRenderer.ShapeType.Line);
+            shaper.setColor(Color.WHITE);
+            shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
+            shaper.setColor(Color.PINK);
+            shaper.circle(0, 0, 1);
+            shaper.end();
         }
 
     }
