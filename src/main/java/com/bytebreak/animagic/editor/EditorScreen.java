@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -52,6 +53,11 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     OrthographicCamera animationCamera;
     OrthographicCamera textureEditCamera;
+    OrthographicCamera mainCamera;
+
+    FrameBuffer animationBuffer = getNewFrameBuffer();
+    FrameBuffer textureEditBuffer = getNewFrameBuffer();
+
     private final Stage stage;
     private final Skin skin;
 
@@ -66,11 +72,18 @@ public class EditorScreen extends InputAdapter implements Screen {
     private Rectangle animatorPanelArea = new Rectangle();
     private Rectangle editorPanelArea = new Rectangle();
 
+    private Vector2 animatorPanelAreaOffset = new Vector2();
+    private Vector2 editorPanelAreaOffset = new Vector2();
+
     private Animation currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new TextureRegion[] {new TextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888))});
 
     public EditorScreen() {
         animationCamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         textureEditCamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        mainCamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        mainCamera.position.set(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, 0);
+        mainCamera.update();
+
         batch = new SpriteBatch(1);
         shaper = new ShapeRenderer();
 
@@ -283,30 +296,65 @@ public class EditorScreen extends InputAdapter implements Screen {
             renderSelectedRegion(delta);
         }
 
+        renderFinal();
+    }
+
+    private void renderFinal() {
+        batch.setProjectionMatrix(mainCamera.combined);
+        batch.begin();
+        if (animationBuffer != null) {
+//            System.out.println("AnPan: " + animatorPanelArea);
+            batch.draw(animationBuffer.getColorBufferTexture(), animatorPanelAreaOffset.x, Gdx.graphics.getHeight() + animatorPanelAreaOffset.y, Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
+        }
+        if (textureEditBuffer != null) {
+//            System.out.println("EdPan: " + editorPanelArea);
+            batch.draw(textureEditBuffer.getColorBufferTexture(), editorPanelAreaOffset.x, Gdx.graphics.getHeight() + editorPanelAreaOffset.y, Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
+//            batch.draw(textureEditBuffer.getColorBufferTexture(), 0, 0);
+        }
+        batch.end();
+
+        shaper.setProjectionMatrix(mainCamera.combined);
+        shaper.begin(ShapeRenderer.ShapeType.Line);
+        shaper.setColor(Color.GREEN);
+        shaper.rect(animatorPanelArea.x, animatorPanelArea.y, animatorPanelArea.width, animatorPanelArea.height);
+        shaper.rect(editorPanelArea.x, editorPanelArea.y, editorPanelArea.width, editorPanelArea.height);
+        shaper.end();
     }
 
     private void renderAnimationPanel(float delta) {
-        Vector2 cameraLoc = new Vector2(Gdx.graphics.getWidth(), 0);
-        Vector2 size = new Vector2(animationPanel.getWidth(), animationPanel.getHeight());
-        Vector2 halfSize = new Vector2(size).scl(.5f);
-        cameraLoc.sub(animationPanel.localToStageCoordinates(new Vector2(0, 0)).sub(halfSize));
-
-        animationCamera.position.set(-1 * (cameraLoc.x), 1 * (cameraLoc.y), 0);
-        animationCamera.update();
-        batch.setProjectionMatrix(animationCamera.combined);
-        Rectangle scissors = new Rectangle();
-        Rectangle clipBounds = new Rectangle(-halfSize.x, -halfSize.y, size.x, size.y);
-        ScissorStack.calculateScissors(animationCamera, batch.getTransformMatrix(), clipBounds, scissors);
-        ScissorStack.pushScissors(scissors);
-        animatorPanelArea.set(scissors);
         currentAnimation.update(delta);
 
+        Vector2 animatorPanelLoc = animationPanel.localToStageCoordinates(new Vector2(0, 0));
+
+        Vector2 cameraAreaSize = new Vector2();
+        cameraAreaSize.y = Math.abs(animationPanel.getHeight()); // distance from top of scroll panel to bottom of button panel
+        cameraAreaSize.x = Math.abs(animationPanel.getWidth());
+
+        Vector2 regionCamCenterPoint = new Vector2(0, 0);
+        regionCamCenterPoint.x = Gdx.graphics.getWidth() - cameraAreaSize.x / 2; // this camera is rendering up against the right side of the screen
+        regionCamCenterPoint.y = animatorPanelLoc.y + cameraAreaSize.y/2;
+
+        Vector2 texturePanelLocation = new Vector2(-1 * (Gdx.graphics.getWidth()/2 - regionCamCenterPoint.x), -1 * (Gdx.graphics.getHeight()/2 - regionCamCenterPoint.y));
+        animatorPanelAreaOffset.set(texturePanelLocation.x, texturePanelLocation.y);
+
+        batch.setProjectionMatrix(animationCamera.combined);
+        Rectangle scissors = new Rectangle();
+        Vector3 bottomLeft = animationCamera.unproject(new Vector3(-cameraAreaSize.x / 2, -cameraAreaSize.y / 2, 0).add(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, 0));
+        Vector3 topRight = animationCamera.unproject(new Vector3(cameraAreaSize.x / 2, cameraAreaSize.y / 2, 0).add(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, 0));
+        Rectangle clipBounds = new Rectangle(bottomLeft.x, bottomLeft.y, topRight.x - bottomLeft.x, topRight.y - bottomLeft.y);
+        ScissorStack.calculateScissors(animationCamera, batch.getTransformMatrix(), clipBounds, scissors);
+        ScissorStack.pushScissors(scissors);
+
+        animatorPanelArea.set(scissors).setCenter(regionCamCenterPoint);
+
+        animationBuffer.begin();
+        Gdx.gl.glClearColor(0f, 0f, 0f, 0f);
+        Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
         batch.begin();
         AnimagicTextureRegion frame = currentAnimation.getFrame();
         batch.draw(frame, frame.meta.xOffset, frame.meta.yOffset);
         batch.flush();
         batch.end();
-        ScissorStack.popScissors();
 
         shaper.setProjectionMatrix(animationCamera.combined);
         shaper.begin(ShapeRenderer.ShapeType.Line);
@@ -314,45 +362,45 @@ public class EditorScreen extends InputAdapter implements Screen {
         shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
         shaper.setColor(Color.PINK);
         shaper.circle(0, 0, 1);
+//        for(int i = 100; i < 1000; i += 100) {
+//            shaper.circle(0, 0, i);
+//        }
         shaper.end();
+        ScissorStack.popScissors();
+        animationBuffer.end();
     }
 
     private void renderSelectedRegion(float delta) {
         Vector2 animatorPanelLoc = animationPanel.localToStageCoordinates(new Vector2(0, 0));
-        Vector2 scrollPanelLoc = scrollPanel.localToStageCoordinates(new Vector2(0, 0));
-        scrollPanelLoc.add(0, scrollPanel.getHeight());
         Vector2 buttonPanelLoc = buttonPanel.localToStageCoordinates(new Vector2(0, 0));
 
         Vector2 cameraAreaSize = new Vector2();
-        cameraAreaSize.y = Math.abs(buttonPanelLoc.y - scrollPanelLoc.y); // distance from top of scroll panel to bottom of button panel
+        cameraAreaSize.y = Math.abs(buttonPanelLoc.y - scrollPanel.getHeight()); // distance from top of scroll panel to bottom of button panel
         cameraAreaSize.x = Math.abs(animatorPanelLoc.x);
-
-//        System.out.println("Edit Panel Size: " + cameraAreaSize);
-
 
         Vector2 regionCamCenterPoint = new Vector2(0, 0);
         regionCamCenterPoint.x = cameraAreaSize.x / 2; // this camera is rendering up against the left side of the screen
         regionCamCenterPoint.y = scrollPanel.getHeight() + cameraAreaSize.y/2;
 
-//        System.out.println("Cam origin location: " + regionCamCenterPoint);
-
         Vector2 texturePanelLocation = new Vector2(-1 * (Gdx.graphics.getWidth()/2 - regionCamCenterPoint.x), -1 * (Gdx.graphics.getHeight()/2 - regionCamCenterPoint.y));
+        editorPanelAreaOffset.set(texturePanelLocation.x, texturePanelLocation.y);
 
-        textureEditCamera.position.set(-1 * texturePanelLocation.x, -1 * texturePanelLocation.y, 0);
-        textureEditCamera.update();
+        textureEditBuffer.begin();
+        Gdx.gl.glClearColor(0f, 0f, 0f, 0f);
+        Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
         batch.setProjectionMatrix(textureEditCamera.combined);
         Rectangle scissors = new Rectangle();
-        Rectangle clipBounds = new Rectangle(-cameraAreaSize.x/2, -cameraAreaSize.y/2, cameraAreaSize.x, cameraAreaSize.y);
+        Vector3 bottomLeft = textureEditCamera.unproject(new Vector3(-cameraAreaSize.x / 2, -cameraAreaSize.y / 2, 0).add(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, 0));
+        Vector3 topRight = textureEditCamera.unproject(new Vector3(cameraAreaSize.x / 2, cameraAreaSize.y / 2, 0).add(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2, 0));
+        Rectangle clipBounds = new Rectangle(bottomLeft.x, bottomLeft.y, topRight.x - bottomLeft.x, topRight.y - bottomLeft.y);
         ScissorStack.calculateScissors(textureEditCamera, batch.getTransformMatrix(), clipBounds, scissors);
         ScissorStack.pushScissors(scissors);
 
-        editorPanelArea.set(scissors);
-
+        editorPanelArea.set(scissors).setCenter(regionCamCenterPoint);
         batch.begin();
         batch.draw(selectedRegion, selectedRegion.meta.xOffset, selectedRegion.meta.yOffset);
         batch.flush();
         batch.end();
-        ScissorStack.popScissors();
 
         shaper.setProjectionMatrix(textureEditCamera.combined);
         shaper.begin(ShapeRenderer.ShapeType.Line);
@@ -360,7 +408,12 @@ public class EditorScreen extends InputAdapter implements Screen {
         shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
         shaper.setColor(Color.PINK);
         shaper.circle(0, 0, 1);
+//        for(int i = 100; i < 1000; i += 100) {
+//            shaper.circle(0, 0, i);
+//        }
         shaper.end();
+        ScissorStack.popScissors();
+        textureEditBuffer.end();
     }
 
     @Override
@@ -388,15 +441,70 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     }
 
+    private Vector2 mousePosition = new Vector2();
+    private Vector2 touchPoint = new Vector2();
+    private Vector2 lastPosition = new Vector2();
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        mousePosition.set(screenToMainCamCoords(screenX, screenY));
+        return false;
+    }
+
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (editorPanelArea.contains(screenX, Gdx.graphics.getHeight() - screenY)) {
+        touchPoint.set(screenToMainCamCoords(screenX, screenY));
+        System.out.println("TouchPoint " + touchPoint);
+        lastPosition.set(touchPoint);
+        if (editorPanelArea.contains(touchPoint)) {
             System.out.println("CLICKED THE EDITOR");
         }
-        if (animatorPanelArea.contains(screenX, Gdx.graphics.getHeight() - screenY)) {
+        if (animatorPanelArea.contains(touchPoint)) {
             System.out.println("CLICKED THE ANIMATOR");
         }
-        System.out.println(animationCamera.unproject(new Vector3(screenX, screenY, 0)));
+        System.out.println("AnimCam: " + animationCamera.unproject(new Vector3(screenX, screenY, 0)));
+        System.out.println("MainCam: " + mainCamera.unproject(new Vector3(screenX, screenY, 0)));
+
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        Vector2 currentPoint = screenToMainCamCoords(screenX, screenY);
+        if (editorPanelArea.contains(touchPoint.x, touchPoint.y)) {
+            System.out.println("Trag inside editor! From: " + lastPosition + " to: " + currentPoint);
+            Vector3 lastPositionInCamera = textureEditCamera.unproject(new Vector3(lastPosition.x, lastPosition.y, 0));
+            Vector3 currentPositionInCamera = textureEditCamera.unproject(new Vector3(lastPosition.x, lastPosition.y, 0));
+            textureEditCamera.position.add(currentPositionInCamera.sub(lastPositionInCamera));
+            textureEditCamera.update();
+        }
+        lastPosition.set(currentPoint);
+        return false;
+    }
+
+    private Vector2 screenToMainCamCoords(int screenX, int screenY) {
+        Vector3 mainCamTouchPoint = mainCamera.unproject(new Vector3(screenX, screenY, 0));
+        return new Vector2(mainCamTouchPoint.x, mainCamTouchPoint.y);
+    }
+
+    public FrameBuffer getNewFrameBuffer() {
+        return new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+    }
+
+    @Override
+    public boolean scrolled(int amount) {
+        OrthographicCamera camToZoom = null;
+        if (editorPanelArea.contains(mousePosition)) {
+            camToZoom = textureEditCamera;
+        } else if (animatorPanelArea.contains(mousePosition)) {
+            camToZoom = animationCamera;
+        }
+
+        if (camToZoom != null) {
+            camToZoom.zoom += amount / 10f;
+            camToZoom.zoom = Math.max(.05f, camToZoom.zoom);
+            camToZoom.update();
+        }
         return false;
     }
 }
