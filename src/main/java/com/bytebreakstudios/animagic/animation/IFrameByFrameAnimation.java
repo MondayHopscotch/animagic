@@ -1,4 +1,4 @@
-package com.bytebreakstudios.animagic;
+package com.bytebreakstudios.animagic.animation;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 

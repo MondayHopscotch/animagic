@@ -1,6 +1,10 @@
 package com.bytebreakstudios.animagic;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.bytebreakstudios.animagic.animation.Animation;
+import com.bytebreakstudios.animagic.animation.AnimationBlend;
+import com.bytebreakstudios.animagic.animation.FrameRate;
+import com.bytebreakstudios.animagic.utils.AnimagicException;
 import org.junit.Assert;
 import org.junit.Test;
 

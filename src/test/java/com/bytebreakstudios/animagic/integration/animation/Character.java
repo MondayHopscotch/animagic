@@ -4,7 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.bytebreakstudios.animagic.*;
+import com.bytebreakstudios.animagic.animation.*;
 import com.bytebreakstudios.animagic.texture.AnimagicTextureAtlas;
 
 public class Character implements AnimationListener {

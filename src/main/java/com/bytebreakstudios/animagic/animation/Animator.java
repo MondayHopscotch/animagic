@@ -1,7 +1,8 @@
-package com.bytebreakstudios.animagic;
+package com.bytebreakstudios.animagic.animation;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.bytebreakstudios.animagic.utils.AnimagicException;
 
 import java.util.ArrayList;
 import java.util.List;
