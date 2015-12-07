@@ -3,9 +3,9 @@ package com.bytebreak.animagic.integration.animation;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.bytebreak.animagic.*;
+import com.bytebreak.animagic.texture.AnimagicTextureAtlas;
 
 public class Character implements AnimationListener {
     float x = 0;
@@ -19,31 +19,31 @@ public class Character implements AnimationListener {
 
     String[] combos = new String[]{"kick", "thrust", "bash", "cut", "slash", "smash"};
 
-    public Character(TextureAtlas atlas) {
+    public Character(AnimagicTextureAtlas atlas) {
         animator = new Animator("character");
 
-        animator.addAnimation(new Animation("kick", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegions("kick/kick").toArray(TextureRegion.class), new int[]{6}).listen(this));
-        animator.addAnimation(new Animation("thrust", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegions("thrust/thrust").toArray(TextureRegion.class), new int[]{6}).listen(this));
-        animator.addAnimation(new Animation("bash", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegions("bash/bash").toArray(TextureRegion.class), new int[]{6}).listen(this));
-        animator.addAnimation(new Animation("cut", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegions("cut/cut").toArray(TextureRegion.class), new int[]{6}).listen(this));
-        animator.addAnimation(new Animation("slash", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegions("slash/slash").toArray(TextureRegion.class), new int[]{6}).listen(this));
-        animator.addAnimation(new Animation("smash", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegions("smash/smash").toArray(TextureRegion.class), new int[]{6}).listen(this));
+        animator.addAnimation(new Animation("kick", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegionsWithMeta("kick").toArray(TextureRegion.class), new int[]{6}).listen(this));
+        animator.addAnimation(new Animation("thrust", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegionsWithMeta("thrust").toArray(TextureRegion.class), new int[]{6}).listen(this));
+        animator.addAnimation(new Animation("bash", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegionsWithMeta("bash").toArray(TextureRegion.class), new int[]{6}).listen(this));
+        animator.addAnimation(new Animation("cut", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegionsWithMeta("cut").toArray(TextureRegion.class), new int[]{6}).listen(this));
+        animator.addAnimation(new Animation("slash", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegionsWithMeta("slash").toArray(TextureRegion.class), new int[]{6}).listen(this));
+        animator.addAnimation(new Animation("smash", Animation.AnimationPlayState.ONCE, FrameRate.total(0.75f), atlas.findRegionsWithMeta("smash").toArray(TextureRegion.class), new int[]{6}).listen(this));
 
-        animator.addAnimation(new Animation("jump", Animation.AnimationPlayState.ONCE, FrameRate.total(1.0f), atlas.findRegions("jump/jump").toArray(TextureRegion.class)));
-        animator.addAnimation(new Animation("throw", Animation.AnimationPlayState.ONCE, FrameRate.total(1.0f), atlas.findRegions("throw/throw").toArray(TextureRegion.class)).listen(this));
-        animator.addAnimation(new Animation("climb", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.0f), atlas.findRegions("climb/climb").toArray(TextureRegion.class)));
-        animator.addAnimation(new Animation("sprint", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.75f), atlas.findRegions("sprint/sprint").toArray(TextureRegion.class)));
-        animator.addAnimation(new Animation("push", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.75f), atlas.findRegions("push/push").toArray(TextureRegion.class)));
-        animator.addAnimation(new Animation("stand", Animation.AnimationPlayState.ONCE, FrameRate.total(0f), new TextureRegion[]{atlas.findRegions("pose/pose").get(3)}));
+        animator.addAnimation(new Animation("jump", Animation.AnimationPlayState.ONCE, FrameRate.total(1.0f), atlas.findRegionsWithMeta("jump").toArray(TextureRegion.class)));
+        animator.addAnimation(new Animation("throw", Animation.AnimationPlayState.ONCE, FrameRate.total(1.0f), atlas.findRegionsWithMeta("throw").toArray(TextureRegion.class)).listen(this));
+        animator.addAnimation(new Animation("climb", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.0f), atlas.findRegionsWithMeta("climb").toArray(TextureRegion.class)));
+        animator.addAnimation(new Animation("sprint", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.75f), atlas.findRegionsWithMeta("sprint").toArray(TextureRegion.class)));
+        animator.addAnimation(new Animation("push", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.75f), atlas.findRegionsWithMeta("push").toArray(TextureRegion.class)));
+        animator.addAnimation(new Animation("stand", Animation.AnimationPlayState.ONCE, FrameRate.total(0f), new TextureRegion[]{atlas.findRegionsWithMeta("pose").get(3)}));
         animator.addAnimation(new AnimationBlend(6).addAnimation(
-                new Animation("walk", Animation.AnimationPlayState.REPEAT, FrameRate.total(1f), atlas.findRegions("walk/walk").toArray(TextureRegion.class))).addAnimation(
-                new Animation("run", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegions("run/run").toArray(TextureRegion.class))).addAnimation(
-                new Animation("sneak", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.25f), atlas.findRegions("sneak/sneak").toArray(TextureRegion.class))).addAnimation(
-                new Animation("crawl", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.25f), atlas.findRegions("crawl/crawl").toArray(TextureRegion.class))).addAnimation(
-                new Animation("runpistol", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegions("runpistol/runpistol").toArray(TextureRegion.class))).addAnimation(
-                new Animation("runpistolaim", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegions("runpistolaim/runpistolaim").toArray(TextureRegion.class))).addAnimation(
-                new Animation("runrifle", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegions("runrifle/runrifle").toArray(TextureRegion.class))).addAnimation(
-                new Animation("runrifleaim", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegions("runrifleaim/runrifleaim").toArray(TextureRegion.class))));
+                new Animation("walk", Animation.AnimationPlayState.REPEAT, FrameRate.total(1f), atlas.findRegionsWithMeta("walk").toArray(TextureRegion.class))).addAnimation(
+                new Animation("run", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegionsWithMeta("run").toArray(TextureRegion.class))).addAnimation(
+                new Animation("sneak", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.25f), atlas.findRegionsWithMeta("sneak").toArray(TextureRegion.class))).addAnimation(
+                new Animation("crawl", Animation.AnimationPlayState.REPEAT, FrameRate.total(1.25f), atlas.findRegionsWithMeta("crawl").toArray(TextureRegion.class))).addAnimation(
+                new Animation("runpistol", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegionsWithMeta("runpistol").toArray(TextureRegion.class))).addAnimation(
+                new Animation("runpistolaim", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegionsWithMeta("runpistolaim").toArray(TextureRegion.class))).addAnimation(
+                new Animation("runrifle", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegionsWithMeta("runrifle").toArray(TextureRegion.class))).addAnimation(
+                new Animation("runrifleaim", Animation.AnimationPlayState.REPEAT, FrameRate.total(0.5f), atlas.findRegionsWithMeta("runrifleaim").toArray(TextureRegion.class))));
 
         animator.switchToAnimation("stand");
     }

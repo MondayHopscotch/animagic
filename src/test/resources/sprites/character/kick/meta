@@ -1,0 +1,30 @@
+{
+  "frameData" : [ "java.util.ArrayList", [ {
+    "xOffset" : 0,
+    "yOffset" : 0
+  }, {
+    "xOffset" : 1,
+    "yOffset" : 1
+  }, {
+    "xOffset" : 2,
+    "yOffset" : 2
+  }, {
+    "xOffset" : 3,
+    "yOffset" : 3
+  }, {
+    "xOffset" : 4,
+    "yOffset" : 4
+  }, {
+    "xOffset" : 5,
+    "yOffset" : 5
+  }, {
+    "xOffset" : 6,
+    "yOffset" : 6
+  }, {
+    "xOffset" : 7,
+    "yOffset" : 7
+  }, {
+    "xOffset" : 8,
+    "yOffset" : 8
+  } ] ]
+}

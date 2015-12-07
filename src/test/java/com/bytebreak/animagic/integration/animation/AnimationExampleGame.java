@@ -3,9 +3,11 @@ package com.bytebreak.animagic.integration.animation;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.bytebreak.animagic.texture.AnimagicTextureAtlas;
+import com.bytebreak.animagic.texture.AnimagicTextureAtlasLoader;
 
 public class AnimationExampleGame extends Game {
     AssetManager assetManager;
@@ -16,10 +18,12 @@ public class AnimationExampleGame extends Game {
     @Override
     public void create() {
         assetManager = new AssetManager();
-        assetManager.load("packed/character.atlas", TextureAtlas.class);
+        assetManager.setLoader(AnimagicTextureAtlas.class, new AnimagicTextureAtlasLoader(new InternalFileHandleResolver()));
+
+        assetManager.load("packed/character.atlas", AnimagicTextureAtlas.class);
         assetManager.finishLoading();
 
-        character = new Character(assetManager.get("packed/character.atlas", TextureAtlas.class));
+        character = new Character(assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class));
 
         spriteBatch = new SpriteBatch();
     }
