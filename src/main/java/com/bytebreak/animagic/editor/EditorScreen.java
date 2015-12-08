@@ -161,7 +161,6 @@ public class EditorScreen extends InputAdapter implements Screen {
         loadButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("LOADING");
                 String loadDir = FileUtils.selectDirectory();
                 System.out.println(loadDir);
                 if (loadDir != null) {
@@ -174,7 +173,6 @@ public class EditorScreen extends InputAdapter implements Screen {
         saveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("SAVING");
                 if (currentAnimationDir != null) {
                     AnimagicAnimationData animationData = new AnimagicAnimationData();
                     for (AnimagicTextureRegion frame : currentAnimation.getAllFrames()) {
@@ -277,7 +275,6 @@ public class EditorScreen extends InputAdapter implements Screen {
         parentMenu.add(menu);
 
         stage.addActor(parentMenu);
-        System.out.println(button.localToStageCoordinates(new Vector2(0, 0)));
     }
 
     @Override
@@ -288,12 +285,14 @@ public class EditorScreen extends InputAdapter implements Screen {
         stage.act(delta);
         stage.draw();
 
+        currentAnimation.update(delta);
+
         if (animationPanel != null) {
-            renderAnimationPanel(delta);
+            renderAnimationPanel();
         }
 
         if (selectedRegion != null) {
-            renderSelectedRegion(delta);
+            renderSelectedRegion();
         }
 
         renderFinal();
@@ -303,13 +302,10 @@ public class EditorScreen extends InputAdapter implements Screen {
         batch.setProjectionMatrix(mainCamera.combined);
         batch.begin();
         if (animationBuffer != null) {
-//            System.out.println("AnPan: " + animatorPanelArea);
             batch.draw(animationBuffer.getColorBufferTexture(), animatorPanelAreaOffset.x, Gdx.graphics.getHeight() + animatorPanelAreaOffset.y, Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
         }
         if (textureEditBuffer != null) {
-//            System.out.println("EdPan: " + editorPanelArea);
             batch.draw(textureEditBuffer.getColorBufferTexture(), editorPanelAreaOffset.x, Gdx.graphics.getHeight() + editorPanelAreaOffset.y, Gdx.graphics.getWidth(), -Gdx.graphics.getHeight());
-//            batch.draw(textureEditBuffer.getColorBufferTexture(), 0, 0);
         }
         batch.end();
 
@@ -321,9 +317,7 @@ public class EditorScreen extends InputAdapter implements Screen {
         shaper.end();
     }
 
-    private void renderAnimationPanel(float delta) {
-        currentAnimation.update(delta);
-
+    private void renderAnimationPanel() {
         Vector2 animatorPanelLoc = animationPanel.localToStageCoordinates(new Vector2(0, 0));
 
         Vector2 cameraAreaSize = new Vector2();
@@ -361,16 +355,13 @@ public class EditorScreen extends InputAdapter implements Screen {
         shaper.setColor(Color.WHITE);
         shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
         shaper.setColor(Color.PINK);
-        shaper.circle(0, 0, 1);
-//        for(int i = 100; i < 1000; i += 100) {
-//            shaper.circle(0, 0, i);
-//        }
+        shaper.rect(0, 0, 1, 1);
         shaper.end();
         ScissorStack.popScissors();
         animationBuffer.end();
     }
 
-    private void renderSelectedRegion(float delta) {
+    private void renderSelectedRegion() {
         Vector2 animatorPanelLoc = animationPanel.localToStageCoordinates(new Vector2(0, 0));
         Vector2 buttonPanelLoc = buttonPanel.localToStageCoordinates(new Vector2(0, 0));
 
@@ -398,7 +389,7 @@ public class EditorScreen extends InputAdapter implements Screen {
 
         editorPanelArea.set(scissors).setCenter(regionCamCenterPoint);
         batch.begin();
-        batch.draw(selectedRegion, selectedRegion.meta.xOffset, selectedRegion.meta.yOffset);
+        batch.draw(selectedRegion, 0, 0);
         batch.flush();
         batch.end();
 
@@ -406,11 +397,9 @@ public class EditorScreen extends InputAdapter implements Screen {
         shaper.begin(ShapeRenderer.ShapeType.Line);
         shaper.setColor(Color.WHITE);
         shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
+        shaper.rect(selectedRegion.getOffset().x, selectedRegion.getOffset().y, selectedRegion.getRegionWidth(), selectedRegion.getRegionHeight());
         shaper.setColor(Color.PINK);
-        shaper.circle(0, 0, 1);
-//        for(int i = 100; i < 1000; i += 100) {
-//            shaper.circle(0, 0, i);
-//        }
+        shaper.rect(selectedRegion.getOffset().x, selectedRegion.getOffset().y, 1, 1);
         shaper.end();
         ScissorStack.popScissors();
         textureEditBuffer.end();
@@ -442,8 +431,17 @@ public class EditorScreen extends InputAdapter implements Screen {
     }
 
     private Vector2 mousePosition = new Vector2();
+
     private Vector2 touchPoint = new Vector2();
+    private Vector2 editorTouchPoint = new Vector2();
+    private Vector2 animationTouchPoint = new Vector2();
+
     private Vector2 lastPosition = new Vector2();
+
+    private Vector2 effectiveEditorTouchPoint = new Vector2();
+
+    private Vector3 initialCamPosition = new Vector3();
+    private Vector3 touchedCameraPosition = new Vector3();
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
@@ -453,38 +451,96 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        touchPoint.set(screenToMainCamCoords(screenX, screenY));
+        updateTouchPoints(screenX, screenY);
+//        Vector2 twoDimension = new Vector2(screenX, screenY).add(editorPanelArea.x, editorPanelArea.y).sub(editorPanelAreaOffset);
+        Vector2 twoDimension = new Vector2(screenX, screenY).sub(editorPanelArea.getCenter(new Vector2()));
+//        Vector2 twoDimension = new Vector2(screenX, screenY).sub(editorPanelAreaOffset);
+        Vector3 unProject = textureEditCamera.unproject(new Vector3(twoDimension, 0));
+        effectiveEditorTouchPoint.set(unProject.x, unProject.y);
         System.out.println("TouchPoint " + touchPoint);
         lastPosition.set(touchPoint);
+
         if (editorPanelArea.contains(touchPoint)) {
-            System.out.println("CLICKED THE EDITOR");
+            initialCamPosition.set(textureEditCamera.position);
+            touchedCameraPosition.set(editorTouchPoint, 0);
         }
         if (animatorPanelArea.contains(touchPoint)) {
-            System.out.println("CLICKED THE ANIMATOR");
+            initialCamPosition.set(animationCamera.position);
+            touchedCameraPosition.set(animationTouchPoint, 0);
         }
-        System.out.println("AnimCam: " + animationCamera.unproject(new Vector3(screenX, screenY, 0)));
-        System.out.println("MainCam: " + mainCamera.unproject(new Vector3(screenX, screenY, 0)));
+        return false;
+    }
 
+    private void updateTouchPoints(int screenX, int screenY) {
+        touchPoint.set(screenToMainCamCoords(screenX, screenY));
+        editorTouchPoint.set(screenToEditorCamCoords(screenX, screenY));
+        animationTouchPoint.set(screenToAnimationCamCoords(screenX, screenY));
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        if (editorPanelArea.contains(touchPoint)) {
+            if (selectedRegion != null) {
+                Vector2 releasePoint = screenToEditorCamCoords(screenX, screenY);
+                if (releasePoint.sub(touchPoint).len() <= 1) {
+                    selectedRegion.meta.xOffset = (int) effectiveEditorTouchPoint.x;
+                    selectedRegion.meta.yOffset = (int) effectiveEditorTouchPoint.y;
+                }
+            }
+        }
         return false;
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        Vector2 currentPoint = screenToMainCamCoords(screenX, screenY);
-        if (editorPanelArea.contains(touchPoint.x, touchPoint.y)) {
-            System.out.println("Trag inside editor! From: " + lastPosition + " to: " + currentPoint);
-            Vector3 lastPositionInCamera = textureEditCamera.unproject(new Vector3(lastPosition.x, lastPosition.y, 0));
-            Vector3 currentPositionInCamera = textureEditCamera.unproject(new Vector3(lastPosition.x, lastPosition.y, 0));
-            textureEditCamera.position.add(currentPositionInCamera.sub(lastPositionInCamera));
-            textureEditCamera.update();
-        }
-        lastPosition.set(currentPoint);
+//        OrthographicCamera camToZoom = null;
+//        if (editorPanelArea.contains(mousePosition)) {
+//            camToZoom = textureEditCamera;
+//        } else if (animatorPanelArea.contains(mousePosition)) {
+//            camToZoom = animationCamera;
+//        }
+//        if (camToZoom != null) {
+//            camToZoom.position.set(initialCamPosition);
+//            camToZoom.update();
+//            Vector3 currentCamCoords = camToZoom.unproject(new Vector3(screenX, screenY, 0));
+//            Vector3 diff = new Vector3(touchedCameraPosition).sub(currentCamCoords);
+////            System.out.println(initialCamPosition);
+////            System.out.println("  " + currentCamCoords);
+////            System.out.println("    " + diff);
+//            camToZoom.position.add(diff);
+//            camToZoom.update();
+//        }
         return false;
     }
 
     private Vector2 screenToMainCamCoords(int screenX, int screenY) {
         Vector3 mainCamTouchPoint = mainCamera.unproject(new Vector3(screenX, screenY, 0));
         return new Vector2(mainCamTouchPoint.x, mainCamTouchPoint.y);
+    }
+
+    private Vector2 screenToEditorCamCoords(int screenX, int screenY) {
+        Vector2 offset = new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
+
+        Vector2 correctedCenter = editorPanelArea.getCenter(new Vector2());
+        correctedCenter.y = Gdx.graphics.getHeight() - correctedCenter.y;
+        offset.sub(correctedCenter);
+        System.out.println("screenCoords: " + new Vector2(screenX, screenY));
+        System.out.println("editorOffset: " + offset);
+        screenX += offset.x;
+        screenY += offset.y;
+        System.out.println("finalPosition: " + new Vector2(screenX, screenY));
+        Vector3 editCamCoords = animationCamera.unproject(new Vector3(screenX, screenY, 0));
+        System.out.println("unprojected: " + new Vector2(editCamCoords.x, editCamCoords.y));
+//        editCamCoords.add(editorPanelAreaOffset.x, editorPanelAreaOffset.y, 0);
+        return new Vector2(editCamCoords.x, editCamCoords.y);
+    }
+
+    private Vector2 screenToAnimationCamCoords(int screenX, int screenY) {
+        screenX += animatorPanelAreaOffset.x;
+        screenY += animatorPanelAreaOffset.y;
+        Vector3 animCamCoords = animationCamera.unproject(new Vector3(screenX, screenY, 0));
+//        animCamCoords.add(animatorPanelAreaOffset.x, animatorPanelAreaOffset.y, 0);
+        return new Vector2(animCamCoords.x, animCamCoords.y);
     }
 
     public FrameBuffer getNewFrameBuffer() {
