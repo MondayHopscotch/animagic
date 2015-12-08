@@ -1,9 +1,11 @@
 package com.bytebreakstudios.animagic.texture;
 
-/**
- * Created by Admin on 11/29/2015.
- */
 public class AnimagicTextureData {
-    public int xOffset;
-    public int yOffset;
+    public final int originX;
+    public final int originY;
+
+    public AnimagicTextureData(int originX, int originY) {
+        this.originX = originX;
+        this.originY = originY;
+    }
 }

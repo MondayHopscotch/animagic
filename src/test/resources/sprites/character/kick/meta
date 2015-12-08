@@ -1,5 +1,5 @@
-{
-  "frameData" : [ "java.util.ArrayList", [ {
+[
+  {
     "xOffset" : 0,
     "yOffset" : 0
   }, {
@@ -26,5 +26,5 @@
   }, {
     "xOffset" : 8,
     "yOffset" : 8
-  } ] ]
-}
+  }
+]

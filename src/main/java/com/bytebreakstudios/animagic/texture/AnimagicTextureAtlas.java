@@ -10,12 +10,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by Monday on 11/12/2015.
- */
 public class AnimagicTextureAtlas extends TextureAtlas {
     final static Pattern lastIntPattern = Pattern.compile("[^0-9]+([0-9]+)$");
 
@@ -48,11 +46,7 @@ public class AnimagicTextureAtlas extends TextureAtlas {
         Array<AnimagicTextureRegion> animagicRegions = new Array<>();
         if (regions.size > 0) {
             for(AtlasRegion region : regions) {
-                AnimagicTextureRegion animagicRegion = new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888));
-                if (withMetaData) {
-                    animagicRegion.meta = loadMetaForRegion(name);
-                }
-                animagicRegions.add(animagicRegion);
+                animagicRegions.add(new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888), loadMetaForRegion(name)));
             }
             return animagicRegions;
         } else {
@@ -64,11 +58,7 @@ public class AnimagicTextureAtlas extends TextureAtlas {
                 if (region == null) {
                     break;
                 } else {
-                    AnimagicTextureRegion animagicRegion = new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888));
-                    if (withMetaData) {
-                        animagicRegion.meta = loadMetaForRegion(i);
-                    }
-                    animagicRegions.add(animagicRegion);
+                    animagicRegions.add(new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888), loadMetaForRegion(name)));
                 }
                 i++;
             }
@@ -81,22 +71,24 @@ public class AnimagicTextureAtlas extends TextureAtlas {
             name = name.substring(0, name.lastIndexOf("/"));
         }
 
-        FileHandle packedMeta = atlasFile.parent().child(getPackedMetaFileName(name));
-        if (packedMeta.exists()) {
-            // load meta file
-            metaFile = FileUtils.loadFileAs(AnimagicAnimationData.class, packedMeta.file());
-        } else {
-            metaFile = null;
-        }
+        String metaFilePath = atlasFile.parent().path() + "/" + getPackedMetaFileName(name);
+        File packedMeta = new File(metaFilePath);
+        if (packedMeta.exists()) metaFile = FileUtils.loadFileAs(AnimagicAnimationData.class, packedMeta);
+        packedMeta = new File("src/test/resources/" + metaFilePath);
+        if (packedMeta.exists()) metaFile = FileUtils.loadFileAs(AnimagicAnimationData.class, packedMeta);
+        packedMeta = new File("src/main/resources/" + metaFilePath);
+        if (packedMeta.exists()) metaFile = FileUtils.loadFileAs(AnimagicAnimationData.class, packedMeta);
+
+        if (metaFile == null) System.err.println("Could not find: " + packedMeta);
     }
 
     private AnimagicTextureData loadMetaForRegion(int frame) {
         //make it zero-based
         frame -= 1;
-        AnimagicTextureData data = new AnimagicTextureData();
+        AnimagicTextureData data = new AnimagicTextureData(0, 0);
         if (metaFile != null) {
-            if (frame >= 0 && metaFile.frameData.size() > frame) {
-                data = metaFile.frameData.get(frame);
+            if (frame >= 0 && metaFile.size() > frame) {
+                data = metaFile.get(frame);
             }
         }
         return data;
@@ -123,7 +115,6 @@ public class AnimagicTextureAtlas extends TextureAtlas {
     }
 
     private String getPackedMetaFileName(String name) {
-        String metaFileName = "meta" + "/" + atlasFile.nameWithoutExtension() + "." + name + ".meta";
-        return metaFileName;
+        return "meta" + "/" + atlasFile.nameWithoutExtension() + "." + name + ".meta";
     }
 }

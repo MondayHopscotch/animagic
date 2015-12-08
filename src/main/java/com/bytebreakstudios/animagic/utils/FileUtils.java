@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.Dialog.ModalityType;
 import java.io.*;
+import java.nio.channels.FileChannel;
 
 /**
  * Simple utility class that allows objects to be saved to file / loaded from file via JSON.
@@ -30,6 +31,15 @@ public class FileUtils {
             return mapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static <T> T fromJson(Class<T> clazz, String json) {
+        try {
+            return mapper.readValue(json, clazz);
+        } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
@@ -78,16 +88,7 @@ public class FileUtils {
     }
 
     public static <T> T loadFileAs(Class<T> clazz, File file) {
-        return loadFileAs(clazz, loadFile(file));
-    }
-
-    public static <T> T loadFileAs(Class<T> clazz, String json) {
-        try {
-            return mapper.readValue(json, clazz);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return fromJson(clazz, loadFile(file));
     }
 
     public static String loadFile(File file) {
@@ -116,5 +117,35 @@ public class FileUtils {
             }
         }
         return null;
+    }
+
+    public static void copyFile(final File sourceFile, final File destFile) throws IOException {
+        System.out.println("Copying file: " + sourceFile + " to " + destFile);
+        if (!destFile.exists()) {
+            destFile.createNewFile();
+        }
+
+        FileChannel source = null;
+        FileChannel destination = null;
+        try {
+            source = new FileInputStream(sourceFile).getChannel();
+            destination = new FileOutputStream(destFile).getChannel();
+            destination.transferFrom(source, 0, source.size());
+        } finally {
+            source.close();
+            destination.close();
+        }
+    }
+
+    public static File createDirectoryStructure(final File desiredDirectory) throws IOException {
+        if (desiredDirectory.exists()) {
+            return desiredDirectory;
+        } else {
+            if (desiredDirectory.mkdirs()) {
+                return desiredDirectory;
+            } else {
+                throw new IOException("Coudn't make the subdirectories, I don't know why :(");
+            }
+        }
     }
 }

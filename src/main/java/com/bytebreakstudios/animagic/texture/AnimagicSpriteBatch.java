@@ -112,38 +112,36 @@ public class AnimagicSpriteBatch extends SpriteBatch {
     }
 
 
-    private Vector2 preDraw(AnimagicTextureRegion region, float x, float y) {
+    private Vector2 preDraw(AnimagicTextureRegion region, float x, float y, float width, float height) {
         if (region.getNormalTexture() != null) {
             this.flush();
             region.getNormalTexture().bind(1);
         }
         region.getTexture().bind(0);
-        Vector2 offset = region.getOffset();
-        offset.add(x, y);
-        return offset;
+        return new Vector2(x, y).sub(width * region.getRelativeOriginX(), height * region.getRelativeOriginY());
     }
 
 
     public void draw(AnimagicTextureRegion region, float x, float y) {
-        Vector2 pos = preDraw(region, x, y);
+        Vector2 pos = preDraw(region, x, y, region.getRegionWidth(), region.getRegionHeight());
         super.draw(region, pos.x, pos.y);
     }
 
 
     public void draw(AnimagicTextureRegion region, float x, float y, float width, float height) {
-        Vector2 pos = preDraw(region, x, y);
+        Vector2 pos = preDraw(region, x, y, width, height);
         super.draw(region, pos.x, pos.y, width, height);
     }
 
 
     public void draw(AnimagicTextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation) {
-        Vector2 pos = preDraw(region, x, y);
+        Vector2 pos = preDraw(region, x, y, width, height);
         super.draw(region, pos.x, pos.y, originX, originY, width, height, scaleX, scaleY, rotation);
     }
 
 
     public void draw(AnimagicTextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, boolean clockwise) {
-        Vector2 pos = preDraw(region, x, y);
+        Vector2 pos = preDraw(region, x, y, width, height);
         super.draw(region, pos.x, pos.y, originX, originY, width, height, scaleX, scaleY, rotation, clockwise);
     }
 
