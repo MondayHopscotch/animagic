@@ -8,8 +8,8 @@
         "originY" : 1
     },
     "2": {
-        "originX" : 2,
-        "originY" : 2
+        "originX" : 20,
+        "originY" : 20
     },
     "3": {
         "originX" : 3,
@@ -20,8 +20,8 @@
         "originY" : 4
     },
     "5": {
-        "originX" : 5,
-        "originY" : 5
+        "originX" : 25,
+        "originY" : 25
     },
     "6": {
         "originX" : 6,

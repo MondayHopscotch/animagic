@@ -2,9 +2,8 @@ package com.bytebreakstudios.animagic.texture;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 import com.bytebreakstudios.animagic.texture.data.AnimagicAnimationData;
 import com.bytebreakstudios.animagic.texture.data.AnimagicAtlasData;
@@ -45,16 +44,6 @@ public class AnimagicTextureAtlas {
         findMetaFile(packFile);
     }
 
-    public AnimagicTextureAtlas(FileHandle packFile, FileHandle imagesDir) {
-        atlas = new TextureAtlas(packFile, imagesDir);
-        findMetaFile(packFile);
-    }
-
-    public AnimagicTextureAtlas(FileHandle packFile, FileHandle imagesDir, boolean flip) {
-        atlas = new TextureAtlas(packFile, imagesDir, flip);
-        findMetaFile(packFile);
-    }
-
     public Array<AnimagicTextureRegion> findRegions(String name) {
         Array<TextureAtlas.AtlasRegion> regions = atlas.findRegions(name);
         Array<AnimagicTextureRegion> animagicRegions = new Array<>();
@@ -79,7 +68,7 @@ public class AnimagicTextureAtlas {
             return animagicRegions;
         } else {
             for (int i = 0; i < regions.size; i++) {
-                animagicRegions.add(new AnimagicTextureRegion(regions.get(i), new Texture(0, 0, Pixmap.Format.RGBA8888), getMeta(name, i)));
+                animagicRegions.add(new AnimagicTextureRegion(regions.get(i), getNormal(name, i), getMeta(name, i)));
             }
             return animagicRegions;
         }
@@ -88,7 +77,7 @@ public class AnimagicTextureAtlas {
     public AnimagicTextureRegion findRegion(String name) {
         TextureAtlas.AtlasRegion region = atlas.findRegion(name);
         if (region != null)
-            return new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888), getMeta(name, 0));
+            return new AnimagicTextureRegion(region, getNormal(name, 0), getMeta(name, 0));
         else return null;
     }
 
@@ -97,15 +86,7 @@ public class AnimagicTextureAtlas {
     }
 
     public AnimagicTextureRegion findRegion(String name, int index, boolean zeroBased) {
-        TextureAtlas.AtlasRegion region = atlas.findRegion(name, index);
-        if (region == null) {
-            region = atlas.findRegion(name + "/" + index);
-            if (region == null) {
-                region = atlas.findRegion(name + "/" + (index < 10 ? "0" + index : index));
-                if (region == null) return null;
-            }
-        }
-        return new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888), getMeta(name, (zeroBased ? index : index - 1)));
+        return new AnimagicTextureRegion(getRegion(name, index), getNormal(name, index), getMeta(name, (zeroBased ? index : index - 1)));
     }
 
     private void findMetaFile(FileHandle atlasFile) {
@@ -129,6 +110,38 @@ public class AnimagicTextureAtlas {
             }
         }
         return new AnimagicTextureData(0, 0);
+    }
+
+    private TextureRegion getNormal(String name, int frameIndex) {
+        TextureRegion region = getRegion(name + "_n", frameIndex);
+        if (region == null) {
+            region = getRegion(name + "-n", frameIndex);
+            if (region == null) {
+                region = getRegion(name + "_normal", frameIndex);
+                if (region == null) {
+                    region = getRegion(name + "_normals", frameIndex);
+                    if (region == null) {
+                        region = getRegion(name + "-normal", frameIndex);
+                        if (region == null) {
+                            region = getRegion(name + "-normals", frameIndex);
+                            if (region == null) return new TextureRegion();
+                        }
+                    }
+                }
+            }
+        }
+        return region;
+    }
+
+    private TextureRegion getRegion(String name, int index) {
+        TextureAtlas.AtlasRegion region = atlas.findRegion(name, index);
+        if (region == null) {
+            region = atlas.findRegion(name + "/" + index);
+            if (region == null) {
+                region = atlas.findRegion(name + "/" + (index < 10 ? "0" + index : index));
+            }
+        }
+        return region;
     }
 
     private String trimTrailingNumber(String text) {

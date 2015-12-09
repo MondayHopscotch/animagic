@@ -24,10 +24,7 @@ public final class AnimagicTexturePacker {
     /**
      * filter to only return meta files
      */
-    private static final FileFilter metaFilter = pathname -> {
-        System.out.println("metaFilter: " + pathname);
-        return pathname.isFile() && pathname.toString().endsWith("meta");
-    };
+    private static final FileFilter metaFilter = pathname -> pathname.isFile() && pathname.toString().endsWith("meta");
 
     public static void pack(File inputDir, File outputDir) {
         TexturePacker.Settings settings = new TexturePacker.Settings();
