@@ -2,6 +2,9 @@ package com.bytebreakstudios.animagic.texture;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.tools.texturepacker.TexturePacker;
+import com.badlogic.gdx.utils.Array;
+import com.bytebreakstudios.animagic.texture.data.AnimagicAnimationData;
+import com.bytebreakstudios.animagic.texture.data.AnimagicAtlasData;
 import com.bytebreakstudios.animagic.utils.FileUtils;
 
 import java.io.File;
@@ -21,13 +24,12 @@ public final class AnimagicTexturePacker {
     /**
      * filter to only return meta files
      */
-    private static final FileFilter metaFilter = pathname -> pathname.isFile() && pathname.getName().equals("meta");
+    private static final FileFilter metaFilter = pathname -> {
+        System.out.println("metaFilter: " + pathname);
+        return pathname.isFile() && pathname.toString().endsWith("meta");
+    };
 
     public static void pack(File inputDir, File outputDir) {
-        pack(inputDir, outputDir, new File(outputDir, "meta"));
-    }
-
-    public static void pack(File inputDir, File outputDir, File metaDir) {
         TexturePacker.Settings settings = new TexturePacker.Settings();
         settings.maxWidth *= 4;
         settings.maxHeight *= 4;
@@ -37,8 +39,6 @@ public final class AnimagicTexturePacker {
         settings.filterMin = Texture.TextureFilter.Nearest;
         settings.filterMag = Texture.TextureFilter.Nearest;
 
-        metaDir.mkdirs();
-
         System.out.println("Start packing textures");
         int count = 0;
         long startTime = System.currentTimeMillis();
@@ -46,7 +46,7 @@ public final class AnimagicTexturePacker {
             count++;
             System.out.println("\n****Packing atlas '" + subDir.getName() + "'");
             TexturePacker.process(settings, subDir.getAbsolutePath(), outputDir.getAbsolutePath(), subDir.getName());
-            findAndCopyMetaFiles(subDir, inputDir, metaDir);
+            findAndCopyMetaFiles(subDir, outputDir);
         }
         long duration = System.currentTimeMillis() - startTime;
         System.out.println("Finished packing textures");
@@ -54,16 +54,22 @@ public final class AnimagicTexturePacker {
         System.out.println(String.format("Total time: %.2f seconds", duration / 1000f));
     }
 
-    private static void findAndCopyMetaFiles(File subDir, File inputDir, File metaDir) {
-        recursiveFindAndCopyMeta(subDir, 0, inputDir, metaDir);
+    private static void findAndCopyMetaFiles(File rawFilesDir, File outputDir) {
+        AnimagicAtlasData atlasMeta = new AnimagicAtlasData();
+        for (File subDir : rawFilesDir.listFiles(directoryFilter)) {
+            recursiveFindAndCopyMeta(subDir, 0, new Array<>(), atlasMeta);
+        }
+        FileUtils.saveToFile(atlasMeta, outputDir.getPath() + "/" + rawFilesDir.getName() + ".meta");
     }
 
-    private static void recursiveFindAndCopyMeta(File dir, int depth, File inputDir, File metaDir) {
+    private static void recursiveFindAndCopyMeta(File dir, int depth, Array<String> path, AnimagicAtlasData data) {
         if (depth > 10) {
             return;
         } else {
+            Array<String> newPath = new Array<>(path);
+            newPath.add(dir.getName());
             for (File subDir : dir.listFiles(directoryFilter)) {
-                recursiveFindAndCopyMeta(subDir, depth + 1, inputDir, metaDir);
+                recursiveFindAndCopyMeta(subDir, depth + 1, newPath, data);
             }
             File[] metaFiles = dir.listFiles(metaFilter);
             if (metaFiles.length > 1) {
@@ -71,18 +77,8 @@ public final class AnimagicTexturePacker {
                 System.exit(2);
             } else if (metaFiles.length == 1) {
                 File metaFile = metaFiles[0];
-                String copiedFileName = metaFile.getAbsolutePath();
-                copiedFileName = copiedFileName.substring(inputDir.getAbsolutePath().length());
-                copiedFileName = copiedFileName.replaceAll("[/\\\\]", "."); // can't save slashes into a filename
-                if (copiedFileName.startsWith(".")) {
-                    copiedFileName = copiedFileName.substring(1);
-                }
-                try {
-                    FileUtils.copyFile(metaFile, new File(metaDir, copiedFileName));
-                } catch (IOException e) {
-                    System.err.println("Failed to copy meta file for " + dir.getAbsolutePath());
-                    e.printStackTrace();
-                }
+                AnimagicAnimationData animData = FileUtils.loadFileAs(AnimagicAnimationData.class, metaFile);
+                data.put(newPath.toString("/"), animData);
             }
         }
     }
