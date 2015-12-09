@@ -5,7 +5,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.utils.Array;
-import com.bytebreakstudios.animagic.texture.*;
+import com.bytebreakstudios.animagic.texture.AnimagicTextureAtlas;
+import com.bytebreakstudios.animagic.texture.AnimagicTextureAtlasLoader;
+import com.bytebreakstudios.animagic.texture.AnimagicTextureRegion;
+import com.bytebreakstudios.animagic.texture.data.AnimagicAnimationData;
+import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +25,7 @@ public class TextureTest extends Game {
 
     public void setupTextureData() {
         data = new AnimagicAnimationData();
-        for (int i = 0; i < 9; i++) data.add(new AnimagicTextureData(i, i));
+        for (int i = 0; i < 9; i++) data.put(i, new AnimagicTextureData(i, i));
     }
 
 
@@ -46,9 +50,9 @@ public class TextureTest extends Game {
 
     public void loadTestMetaAllFrames() {
         AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
-        Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithMeta("kick");
+        Array<AnimagicTextureRegion> kickFrames = atlas.findRegions("kick");
         AnimagicAnimationData realData = new AnimagicAnimationData();
-        kickFrames.forEach(frame -> realData.add(new AnimagicTextureData(frame.getTextureRegionOriginX(), frame.getTextureRegionOriginY())));
+        for (int i = 0; i < kickFrames.size; i++) realData.put(i, kickFrames.get(i).meta());
         if (!data.equals(realData)) {
             failures.add("loadTestMetaAllFrames: ");
             failures.add(data.toString());
@@ -57,15 +61,17 @@ public class TextureTest extends Game {
     }
 
     public void loadTestMetaOneFrame() {
-        int frameNumber = 5;
+        int frameNumber = 1;
+        int frameIndex = frameNumber - 1;
         AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
-        Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithMeta("kick/" + frameNumber);
-        AnimagicAnimationData realData = new AnimagicAnimationData();
-        kickFrames.forEach(frame -> realData.add(new AnimagicTextureData(frame.getTextureRegionOriginX(), frame.getTextureRegionOriginY())));
-        if (!data.get(frameNumber).equals(realData.get(0))) {
+        AnimagicTextureRegion kickFrame = atlas.findRegion("kick", frameNumber, false);
+
+        AnimagicTextureData expectedData = data.get(frameIndex);
+        AnimagicTextureData actualData = kickFrame.meta();
+        if (!expectedData.equals(actualData)) {
             failures.add("loadTestMetaOneFrame: ");
-            failures.add(data.get(frameNumber).toString());
-            failures.add(realData.get(0).toString());
+            failures.add(data.get(frameIndex).toString());
+            failures.add(kickFrame.meta().toString());
         }
     }
 }

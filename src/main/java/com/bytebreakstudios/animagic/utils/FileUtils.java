@@ -1,10 +1,5 @@
 package com.bytebreakstudios.animagic.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Dialog.ModalityType;
@@ -19,34 +14,8 @@ public class FileUtils {
 
     private static String nextSaveDir = null;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-    static {
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.enableDefaultTyping();
-    }
-
-    public static String toJson(Object obj) {
-        try {
-            return mapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static <T> T fromJson(Class<T> clazz, String json) {
-        try {
-            return mapper.readValue(json, clazz);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public static String saveToFile(Object obj) {
-        return saveToFile(toJson(obj));
+        return saveToFile(SerializationUtils.toJson(obj));
     }
 
     public static String saveToFile(Object obj, String dir) {
@@ -88,7 +57,7 @@ public class FileUtils {
     }
 
     public static <T> T loadFileAs(Class<T> clazz, File file) {
-        return fromJson(clazz, loadFile(file));
+        return SerializationUtils.fromJson(clazz, loadFile(file));
     }
 
     public static String loadFile(File file) {

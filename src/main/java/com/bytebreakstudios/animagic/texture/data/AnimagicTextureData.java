@@ -1,5 +1,6 @@
-package com.bytebreakstudios.animagic.texture;
+package com.bytebreakstudios.animagic.texture.data;
 
+import com.bytebreakstudios.animagic.utils.SerializationUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -30,8 +31,6 @@ public class AnimagicTextureData {
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder();
-        b.append("{\"originX\":").append(originX).append(",\"originY\":").append(originY).append("}");
-        return b.toString();
+        return SerializationUtils.toJson(this);
     }
 }

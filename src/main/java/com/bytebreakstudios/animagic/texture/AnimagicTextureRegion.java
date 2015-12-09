@@ -3,6 +3,7 @@ package com.bytebreakstudios.animagic.texture;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
 
 public class AnimagicTextureRegion extends TextureRegion {
     private AnimagicTextureData meta;
@@ -78,8 +79,8 @@ public class AnimagicTextureRegion extends TextureRegion {
     private void init(Texture normals, AnimagicTextureData meta) {
         if (normals == null) throw new RuntimeException("Normals texture cannot be null");
         this.normals = normals;
-        if (meta == null) meta = new AnimagicTextureData(0, 0);
-        this.meta = meta;
+        if (meta == null) this.meta = new AnimagicTextureData(0, 0);
+        else this.meta = meta;
     }
 
     public Texture getNormalTexture() {
@@ -117,6 +118,10 @@ public class AnimagicTextureRegion extends TextureRegion {
 
     public int getTextureRegionOriginY() {
         return meta.originY;
+    }
+
+    public AnimagicTextureData meta() {
+        return meta;
     }
 }
 

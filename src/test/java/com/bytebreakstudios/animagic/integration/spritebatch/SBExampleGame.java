@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.bytebreakstudios.animagic.texture.AnimagicSpriteBatch;
-import com.bytebreakstudios.animagic.texture.AnimagicTextureData;
 import com.bytebreakstudios.animagic.texture.AnimagicTextureRegion;
+import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
 
 public class SBExampleGame extends Game {
     AnimagicSpriteBatch spriteBatchA;
