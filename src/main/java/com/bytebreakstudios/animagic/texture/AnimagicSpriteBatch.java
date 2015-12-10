@@ -117,12 +117,22 @@ public class AnimagicSpriteBatch extends SpriteBatch {
         Vector2 pos = new Vector2(x, y);
         if (region instanceof AnimagicTextureRegion) {
             AnimagicTextureRegion aRegion = (AnimagicTextureRegion) region;
-            if (aRegion.getNormalTexture() != null) {
+            if (aRegion.getNormalTextureRegion() != null) {
                 this.flush();
-                aRegion.getNormalTexture().bind(1);
+                aRegion.getNormalTextureRegion().getTexture().bind(1);
+
+                ShaderProgram p = getShader();
+                p.setUniformf("xCoordMin", aRegion.shaderData.xCoordMin);
+                p.setUniformf("xCoordDiff", aRegion.shaderData.xCoordDiff);
+                p.setUniformf("yCoordMin", aRegion.shaderData.yCoordMin);
+                p.setUniformf("yCoordDiff", aRegion.shaderData.yCoordDiff);
+                p.setUniformf("xNorCoordMin", aRegion.shaderData.xNorCoordMin);
+                p.setUniformf("xNorCoordDiff", aRegion.shaderData.xNorCoordDiff);
+                p.setUniformf("yNorCoordMin", aRegion.shaderData.yNorCoordMin);
+                p.setUniformf("yNorCoordDiff", aRegion.shaderData.yNorCoordDiff);
             }
             region.getTexture().bind(0);
-            pos = pos.sub(width * aRegion.getRelativeOriginX(), height * aRegion.getRelativeOriginY());
+            pos = pos.sub(width * aRegion.getOriginPercentageX(), height * aRegion.getOriginPercentageY());
         }
         return pos;
     }

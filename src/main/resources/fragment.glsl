@@ -43,10 +43,21 @@ uniform bool useShadow;
 uniform float strength;
 uniform bool yInvert;
 
+uniform float xCoordMin;
+uniform float xCoordDiff;
+uniform float yCoordMin;
+uniform float yCoordDiff;
+uniform float xNorCoordMin;
+uniform float xNorCoordDiff;
+uniform float yNorCoordMin;
+uniform float yNorCoordDiff;
+
 void main() {
-    //sample color & normals from our textures
-    vec4 color = texture2D(u_texture, v_texCoords.st);
-    vec3 nColor = texture2D(u_normals, v_texCoords.st).rgb;
+    vec2 norCoords = vec2(xNorCoordMin + (((v_texCoords.x - xCoordMin) / xCoordDiff) * xNorCoordDiff),
+                          yNorCoordMin + (((v_texCoords.y - yCoordMin) / yCoordDiff) * yNorCoordDiff));
+
+    vec4 color = texture2D(u_texture, v_texCoords);
+    vec3 nColor = texture2D(u_normals, norCoords).rgb;
 
     //some bump map programs will need the Y value flipped..
     nColor.g = yInvert ? 1.0 - nColor.g : nColor.g;

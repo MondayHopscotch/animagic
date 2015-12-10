@@ -14,6 +14,16 @@ public class AnimagicTextureData {
         this.originY = originY;
     }
 
+    public AnimagicTextureData(AnimagicTextureData data) {
+        if (data == null) {
+            originX = 0;
+            originY = 0;
+        } else {
+            originX = data.originX;
+            originY = data.originY;
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
