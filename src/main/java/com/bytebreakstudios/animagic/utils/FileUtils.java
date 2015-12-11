@@ -1,4 +1,4 @@
-package com.bytebreak.animagic.utils;
+package com.bytebreakstudios.animagic.utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +12,7 @@ import java.nio.channels.FileChannel;
 public class FileUtils {
 
     private static String nextSaveDir = null;
+    private static String lastDirectory = null;
 
     public static String saveToFile(Object obj) {
         return saveToFile(SerializationUtils.toJson(obj));

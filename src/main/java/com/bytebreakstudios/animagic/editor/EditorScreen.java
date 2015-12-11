@@ -1,4 +1,4 @@
-package com.bytebreak.animagic.editor;
+package com.bytebreakstudios.animagic.editor;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
@@ -21,31 +21,23 @@ import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
-import com.bytebreak.animagic.Animation;
-import com.bytebreak.animagic.FrameRate;
-import com.bytebreak.animagic.texture.AnimagicAnimationData;
-import com.bytebreak.animagic.texture.AnimagicTextureRegion;
-import com.bytebreak.animagic.utils.FileUtils;
+import com.bytebreakstudios.animagic.animation.Animation;
+import com.bytebreakstudios.animagic.animation.FrameRate;
+import com.bytebreakstudios.animagic.texture.AnimagicTextureRegion;
+import com.bytebreakstudios.animagic.texture.data.AnimagicAnimationData;
+import com.bytebreakstudios.animagic.utils.FileUtils;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
 
-/**
- * Created by Monday on 12/2/2015.
- */
 public class EditorScreen extends InputAdapter implements Screen {
 
     /**
      * filter to only return directories
      */
-    FileFilter pngFilter = new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-            return pathname.getPath().toLowerCase().endsWith(".png");
-        }
-    };
+    FileFilter pngFilter = pathname -> pathname.getPath().toLowerCase().endsWith(".png");
 
     private String currentAnimationDir = null;
     private AnimagicTextureRegion selectedRegion = null;
@@ -66,7 +58,7 @@ public class EditorScreen extends InputAdapter implements Screen {
     private Rectangle animatorPanelArea = new Rectangle();
     private Rectangle editorPanelArea = new Rectangle();
 
-    private Animation currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new TextureRegion[] {new TextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888))});
+    private Animation currentAnimation = null;
 
     public EditorScreen() {
         animationCamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -111,17 +103,12 @@ public class EditorScreen extends InputAdapter implements Screen {
         if (currentAnimationDir != null) {
             File animationDir = new File(currentAnimationDir);
             if (animationDir.exists() && animationDir.isDirectory()) {
-                for (File imageFile :animationDir.listFiles(pngFilter)){
-                    frames.add(new AnimagicTextureRegion(new TextureRegion(new Texture(Gdx.files.absolute(imageFile.getAbsolutePath()))), new Texture(0, 0, Pixmap.Format.RGBA8888)));
-                }
                 File metaFile = new File(animationDir, "meta");
-                if (metaFile.exists()) {
-                    AnimagicAnimationData metaData = FileUtils.loadFileAs(AnimagicAnimationData.class, metaFile);
-                    for (int i = 0; i < frames.size(); i++) {
-                        if (metaData.frameData.size() > i) {
-                            frames.get(i).meta = metaData.frameData.get(i);
-                        }
-                    }
+                AnimagicAnimationData metaData = null;
+                if (metaFile.exists()) metaData = FileUtils.loadFileAs(AnimagicAnimationData.class, metaFile);
+
+                for (File imageFile :animationDir.listFiles(pngFilter)){
+                    frames.add(new AnimagicTextureRegion(new TextureRegion(new Texture(Gdx.files.absolute(imageFile.getAbsolutePath()))), new Texture(0, 0, Pixmap.Format.RGBA8888), (metaData != null ? metaData.get(frames.size()) : null)));
                 }
             }
         }
@@ -164,8 +151,8 @@ public class EditorScreen extends InputAdapter implements Screen {
                 System.out.println("SAVING");
                 if (currentAnimationDir != null) {
                     AnimagicAnimationData animationData = new AnimagicAnimationData();
-                    for (AnimagicTextureRegion frame : currentAnimation.getAllFrames()) {
-                        animationData.frameData.add(frame.meta);
+                    for (int i = 0; i < currentAnimation.totalFrames(); i++){
+                        animationData.put(i, ((AnimagicTextureRegion) currentAnimation.getFrames()[i]).meta());
                     }
                     FileUtils.saveToFile(animationData, Paths.get(currentAnimationDir, "meta").toString());
                 }
@@ -176,10 +163,11 @@ public class EditorScreen extends InputAdapter implements Screen {
         centerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                for(AnimagicTextureRegion frame : currentAnimation.getAllFrames()) {
-                    frame.meta.xOffset = -frame.getRegionWidth()/2;
-                    frame.meta.yOffset = -frame.getRegionHeight()/2;
-                }
+                System.out.println("Clicked CENTER button, but not doing anything right now TODO");
+//                for(AnimagicTextureRegion frame : currentAnimation.getFrames()) {
+//                    frame.meta().xOffset = -frame.getRegionWidth()/2;
+//                    frame.meta().yOffset = -frame.getRegionHeight()/2;
+//                }
             }
         });
 
@@ -221,7 +209,7 @@ public class EditorScreen extends InputAdapter implements Screen {
         buttonGroup.setMaxCheckCount(1);
         buttonGroup.setMinCheckCount(1);
 
-            for (AnimagicTextureRegion frame : currentAnimation.getAllFrames()) {
+            for (TextureRegion frame : currentAnimation.getFrames()) {
                 Table itemTable = new Table();
                 TextureRegionDrawable upDrawable = new TextureRegionDrawable(frame);
                 SpriteDrawable downSprite = upDrawable.tint(Color.GREEN);
@@ -229,7 +217,7 @@ public class EditorScreen extends InputAdapter implements Screen {
                 button.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        selectedRegion = frame;
+                        selectedRegion = (AnimagicTextureRegion) frame;
                     }
                 });
                 buttonGroup.add(button);
@@ -302,8 +290,9 @@ public class EditorScreen extends InputAdapter implements Screen {
         currentAnimation.update(delta);
 
         batch.begin();
-        AnimagicTextureRegion frame = currentAnimation.getFrame();
-        batch.draw(frame, frame.meta.xOffset, frame.meta.yOffset);
+        TextureRegion frame = currentAnimation.getFrame();
+        //batch.draw(frame, frame.meta.xOffset, frame.meta.yOffset);
+        batch.draw(frame, 0, 0);
         batch.flush();
         batch.end();
         ScissorStack.popScissors();
@@ -349,7 +338,8 @@ public class EditorScreen extends InputAdapter implements Screen {
         editorPanelArea.set(scissors);
 
         batch.begin();
-        batch.draw(selectedRegion, selectedRegion.meta.xOffset, selectedRegion.meta.yOffset);
+        //batch.draw(selectedRegion, selectedRegion.meta.xOffset, selectedRegion.meta.yOffset);
+        batch.draw(selectedRegion, 0, 0);
         batch.flush();
         batch.end();
         ScissorStack.popScissors();
