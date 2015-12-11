@@ -1,6 +1,5 @@
 package com.bytebreakstudios.animagic.animation;
 
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.bytebreakstudios.animagic.utils.AnimagicException;
 
@@ -53,11 +52,6 @@ public class Animator {
 
     public Animator update(float delta){
         getAnimation().update(delta);
-        return this;
-    }
-    public Animator draw(SpriteBatch spriteBatch){
-        // TODO: somehow the actual size of the thing must get to this point, or maybe i just return a texture region?
-        spriteBatch.draw(getFrame(), 0, 0);
         return this;
     }
 

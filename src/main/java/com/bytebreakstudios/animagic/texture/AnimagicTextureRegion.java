@@ -4,49 +4,61 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
+import com.bytebreakstudios.animagic.utils.AnimagicException;
 
 public class AnimagicTextureRegion extends TextureRegion {
     private final AnimagicTextureData meta;
     private final TextureRegion normals;
     public final AnimagicTextureRegionShaderData shaderData;
 
-    private AnimagicTextureRegion(Texture texture, int x, int y, int width, int height, Texture normals, int xN, int yN, int widthN, int heightN, AnimagicTextureData meta) {
-        super(texture, x, y, width, height);
-        this.normals = new TextureRegion(normals, xN, yN, widthN, heightN);
+    private AnimagicTextureRegion(Texture texture, Texture normals, TextureRegion textureRegion, TextureRegion normalRegion, AnimagicTextureData meta) {
+        super();
+        if (textureRegion == null) {
+            if (texture == null)
+                throw new AnimagicException("Cannot create an AnimagicTextureRegion with a null texture");
+            this.setTexture(texture);
+            this.setRegion(0, 0, texture.getWidth(), texture.getHeight());
+        } else this.setRegion(textureRegion);
+        if (normalRegion == null) {
+            if (normals == null) this.normals = null;
+            else
+                this.normals = new TextureRegion(normals, this.getRegionX(), this.getRegionY(), this.getRegionWidth(), this.getRegionHeight());
+        } else this.normals = new TextureRegion(normalRegion);
+
         this.meta = new AnimagicTextureData(meta);
-        shaderData = new AnimagicTextureRegionShaderData(this);
+        this.shaderData = new AnimagicTextureRegionShaderData(this);
     }
 
     public AnimagicTextureRegion(Texture texture, Texture normals) {
-        this(texture, 0, 0, texture.getWidth(), texture.getHeight(), normals, 0, 0, normals.getWidth(), normals.getHeight(), null);
+        this(texture, normals, null, null, null);
     }
 
     public AnimagicTextureRegion(Texture texture, Texture normals, AnimagicTextureData meta) {
-        this(texture, 0, 0, texture.getWidth(), texture.getHeight(), normals, 0, 0, normals.getWidth(), normals.getHeight(), meta);
+        this(texture, normals, null, null, meta);
     }
 
     public AnimagicTextureRegion(Texture texture, Texture normals, int x, int y, int width, int height) {
-        this(texture, x, y, width, height, normals, x, y, width, height, null);
+        this(texture, normals, new TextureRegion(texture, x, y, width, height), null, null);
     }
 
     public AnimagicTextureRegion(Texture texture, Texture normals, int x, int y, int width, int height, AnimagicTextureData meta) {
-        this(texture, x, y, width, height, normals, x, y, width, height, meta);
+        this(texture, normals, new TextureRegion(texture, x, y, width, height), null, meta);
     }
 
     public AnimagicTextureRegion(TextureRegion texture, TextureRegion normals) {
-        this(texture.getTexture(), texture.getRegionX(), texture.getRegionY(), texture.getRegionWidth(), texture.getRegionHeight(), normals.getTexture(), normals.getRegionX(), normals.getRegionY(), normals.getRegionWidth(), normals.getRegionHeight(), null);
+        this(null, null, texture, normals, null);
     }
 
     public AnimagicTextureRegion(TextureRegion texture, TextureRegion normals, AnimagicTextureData meta) {
-        this(texture.getTexture(), texture.getRegionX(), texture.getRegionY(), texture.getRegionWidth(), texture.getRegionHeight(), normals.getTexture(), normals.getRegionX(), normals.getRegionY(), normals.getRegionWidth(), normals.getRegionHeight(), meta);
+        this(null, null, texture, normals, meta);
     }
 
-    public AnimagicTextureRegion(TextureRegion texture, Texture normals) {
-        this(texture.getTexture(), texture.getRegionX(), texture.getRegionY(), texture.getRegionWidth(), texture.getRegionHeight(), normals, texture.getRegionX(), texture.getRegionY(), texture.getRegionWidth(), texture.getRegionHeight(), null);
+    public AnimagicTextureRegion(AnimagicTextureRegion region) {
+        this(null, null, region, region.getNormalTextureRegion(), region.meta());
     }
 
-    public AnimagicTextureRegion(TextureRegion texture, Texture normals, AnimagicTextureData meta) {
-        this(texture.getTexture(), texture.getRegionX(), texture.getRegionY(), texture.getRegionWidth(), texture.getRegionHeight(), normals, texture.getRegionX(), texture.getRegionY(), texture.getRegionWidth(), texture.getRegionHeight(), meta);
+    public AnimagicTextureRegion(AnimagicTextureRegion region, AnimagicTextureData meta) {
+        this(null, null, region, region.getNormalTextureRegion(), meta);
     }
 
     public TextureRegion getNormalTextureRegion() {
@@ -107,13 +119,20 @@ public class AnimagicTextureRegion extends TextureRegion {
             float y = region.getRegionY();
             float w = region.getRegionWidth();
             float h = region.getRegionHeight();
-            float width_n = region.getNormalTextureRegion().getTexture().getWidth();
-            float height_n = region.getNormalTextureRegion().getTexture().getHeight();
-            float x_n = region.getNormalTextureRegion().getRegionX();
-            float y_n = region.getNormalTextureRegion().getRegionY();
-            float w_n = region.getNormalTextureRegion().getRegionWidth();
-            float h_n = region.getNormalTextureRegion().getRegionHeight();
-
+            float width_n = 0;
+            float height_n = 0;
+            float x_n = 0;
+            float y_n = 0;
+            float w_n = 0;
+            float h_n = 0;
+            if (region.getNormalTextureRegion() != null) {
+                width_n = region.getNormalTextureRegion().getTexture().getWidth();
+                height_n = region.getNormalTextureRegion().getTexture().getHeight();
+                x_n = region.getNormalTextureRegion().getRegionX();
+                y_n = region.getNormalTextureRegion().getRegionY();
+                w_n = region.getNormalTextureRegion().getRegionWidth();
+                h_n = region.getNormalTextureRegion().getRegionHeight();
+            }
 
             xCoordMin = x / width;
             float xCoordMax = (x + w) / width;
