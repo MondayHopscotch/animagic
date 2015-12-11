@@ -1,9 +1,6 @@
 package com.bytebreakstudios.animagic.editor;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -25,6 +22,7 @@ import com.bytebreakstudios.animagic.animation.Animation;
 import com.bytebreakstudios.animagic.animation.FrameRate;
 import com.bytebreakstudios.animagic.texture.AnimagicTextureRegion;
 import com.bytebreakstudios.animagic.texture.data.AnimagicAnimationData;
+import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
 import com.bytebreakstudios.animagic.utils.FileUtils;
 
 import java.io.File;
@@ -60,6 +58,9 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     private Animation currentAnimation = null;
 
+    private float frameScale = 1;
+    private float animationScale = 1;
+
     public EditorScreen() {
         animationCamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         textureEditCamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -68,7 +69,7 @@ public class EditorScreen extends InputAdapter implements Screen {
 
         TextureAtlas menuAtlas = new TextureAtlas(Gdx.files.internal("skins/ui.atlas"));
         stage = new Stage();
-        stage.setDebugAll(true);
+        //stage.setDebugAll(true);
         skin = new Skin(Gdx.files.internal("skins/menu-skin.json"), menuAtlas);
 
         setInputControls();
@@ -86,11 +87,12 @@ public class EditorScreen extends InputAdapter implements Screen {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
+
+        maybeLoadTexture();
         buildUI();
     }
 
     private void buildUI() {
-        maybeLoadTexture();
         stage.clear();
         buildAnimationPanel();
         buildFrameScrollPanel();
@@ -108,17 +110,19 @@ public class EditorScreen extends InputAdapter implements Screen {
                 if (metaFile.exists()) metaData = FileUtils.loadFileAs(AnimagicAnimationData.class, metaFile);
 
                 for (File imageFile :animationDir.listFiles(pngFilter)){
-                    frames.add(new AnimagicTextureRegion(new TextureRegion(new Texture(Gdx.files.absolute(imageFile.getAbsolutePath()))), new Texture(0, 0, Pixmap.Format.RGBA8888), (metaData != null ? metaData.get(frames.size()) : null)));
+                    frames.add(new AnimagicTextureRegion(new TextureRegion(new Texture(Gdx.files.absolute(imageFile.getAbsolutePath()))), null, (metaData != null ? metaData.get(frames.size()) : null)));
                 }
             }
         }
         System.out.println("Found " + frames.size() + " frames");
         if (frames.size() > 0) {
-            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), frames.toArray(new TextureRegion[frames.size()]));
+            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), frames.toArray(new AnimagicTextureRegion[frames.size()]));
         } else {
-            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new TextureRegion[] {new TextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888))});
+            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new AnimagicTextureRegion[]{new AnimagicTextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888), null)});
         }
         currentAnimation = newAnimation;
+        if (currentAnimation.totalFrames() > 0)
+            selectedRegion = (AnimagicTextureRegion) currentAnimation.getFrames()[0];
     }
 
     private void buildButtons() {
@@ -163,11 +167,15 @@ public class EditorScreen extends InputAdapter implements Screen {
         centerButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                System.out.println("Clicked CENTER button, but not doing anything right now TODO");
-//                for(AnimagicTextureRegion frame : currentAnimation.getFrames()) {
-//                    frame.meta().xOffset = -frame.getRegionWidth()/2;
-//                    frame.meta().yOffset = -frame.getRegionHeight()/2;
-//                }
+                System.out.println("Clicked CENTER button");
+                int lastSelected = 0;
+                AnimagicAnimationData meta = new AnimagicAnimationData();
+                for (int i = 0; i < currentAnimation.totalFrames(); i++) {
+                    TextureRegion frame = currentAnimation.getFrames()[i];
+                    if (frame == selectedRegion) lastSelected = i;
+                    meta.put(i, new AnimagicTextureData(frame.getRegionWidth() / 2, frame.getRegionHeight() / 2));
+                }
+                refreshCurrentAnimation(meta, lastSelected);
             }
         });
 
@@ -186,6 +194,7 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     private void loadAnimation(String loadDir) {
         currentAnimationDir = loadDir;
+        maybeLoadTexture();
         buildUI();
     }
 
@@ -209,23 +218,25 @@ public class EditorScreen extends InputAdapter implements Screen {
         buttonGroup.setMaxCheckCount(1);
         buttonGroup.setMinCheckCount(1);
 
-            for (TextureRegion frame : currentAnimation.getFrames()) {
-                Table itemTable = new Table();
-                TextureRegionDrawable upDrawable = new TextureRegionDrawable(frame);
-                SpriteDrawable downSprite = upDrawable.tint(Color.GREEN);
-                ImageButton button = new ImageButton(upDrawable, downSprite, downSprite);
-                button.addListener(new ClickListener() {
-                    @Override
-                    public void clicked(InputEvent event, float x, float y) {
-                        selectedRegion = (AnimagicTextureRegion) frame;
-                    }
-                });
-                buttonGroup.add(button);
-                itemTable.add(button).width(64).height(64).padBottom(40).padTop(20);
-                itemTable.row();
+        for (TextureRegion frame : currentAnimation.getFrames()) {
+            Table itemTable = new Table();
+            TextureRegionDrawable upDrawable = new TextureRegionDrawable(frame);
+            SpriteDrawable downSprite = upDrawable.tint(Color.GREEN);
+            ImageButton button = new ImageButton(upDrawable, downSprite, downSprite);
+            button.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    selectedRegion = (AnimagicTextureRegion) frame;
+                }
+            });
+            buttonGroup.add(button);
+            itemTable.add(button).width(64).height(64).padBottom(40).padTop(20);
+            itemTable.row();
 
-                menu.add(itemTable).padRight(20);
-            }
+            menu.add(itemTable).padRight(20);
+
+            if (frame == selectedRegion) button.setChecked(true);
+        }
         menu.padBottom(-20);
 
         stage.addActor(parentMenu);
@@ -263,6 +274,11 @@ public class EditorScreen extends InputAdapter implements Screen {
         stage.act(delta);
         stage.draw();
 
+        if (Gdx.input.isKeyPressed(Input.Keys.EQUALS)) frameScale *= 1.1f;
+        else if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) frameScale *= .9f;
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT_BRACKET)) animationScale *= 1.1f;
+        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT_BRACKET)) animationScale *= .9f;
+
         if (animationPanel != null) {
             renderAnimationPanel(delta);
         }
@@ -290,19 +306,18 @@ public class EditorScreen extends InputAdapter implements Screen {
         currentAnimation.update(delta);
 
         batch.begin();
-        TextureRegion frame = currentAnimation.getFrame();
-        //batch.draw(frame, frame.meta.xOffset, frame.meta.yOffset);
-        batch.draw(frame, 0, 0);
+        AnimagicTextureRegion frame = (AnimagicTextureRegion) currentAnimation.getFrame();
+        batch.draw(frame, -frame.meta().originX * animationScale, -frame.meta().originY * animationScale, frame.getRegionWidth() * animationScale, frame.getRegionHeight() * animationScale);
         batch.flush();
         batch.end();
         ScissorStack.popScissors();
 
         shaper.setProjectionMatrix(animationCamera.combined);
         shaper.begin(ShapeRenderer.ShapeType.Line);
-        shaper.setColor(Color.WHITE);
-        shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
+//        shaper.setColor(Color.WHITE);
+//        shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
         shaper.setColor(Color.PINK);
-        shaper.circle(0, 0, 1);
+        shaper.circle(0, 0, animationScale);
         shaper.end();
     }
 
@@ -339,17 +354,17 @@ public class EditorScreen extends InputAdapter implements Screen {
 
         batch.begin();
         //batch.draw(selectedRegion, selectedRegion.meta.xOffset, selectedRegion.meta.yOffset);
-        batch.draw(selectedRegion, 0, 0);
+        batch.draw(selectedRegion, -selectedRegion.getRegionWidth() * frameScale / 2, -selectedRegion.getRegionHeight() * frameScale / 2, selectedRegion.getRegionWidth() * frameScale, selectedRegion.getRegionHeight() * frameScale);
         batch.flush();
         batch.end();
         ScissorStack.popScissors();
 
         shaper.setProjectionMatrix(textureEditCamera.combined);
-        shaper.begin(ShapeRenderer.ShapeType.Line);
-        shaper.setColor(Color.WHITE);
-        shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
+        shaper.begin(ShapeRenderer.ShapeType.Filled);
+//        shaper.setColor(Color.WHITE);
+//        shaper.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height);
         shaper.setColor(Color.PINK);
-        shaper.circle(0, 0, 1);
+        shaper.circle(selectedRegion.meta().originX * frameScale - selectedRegion.getRegionWidth() * frameScale / 2, selectedRegion.meta().originY * frameScale - selectedRegion.getRegionHeight() * frameScale / 2, frameScale);
         shaper.end();
     }
 
@@ -380,13 +395,44 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        Vector2 editWorldMousePos = new Vector2(textureEditCamera.unproject(new Vector3(screenX, screenY, 0)).x, textureEditCamera.unproject(new Vector3(screenX, screenY, 0)).y);
+        Vector2 animationWorldMousePos = new Vector2(animationCamera.unproject(new Vector3(screenX, screenY, 0)).x, animationCamera.unproject(new Vector3(screenX, screenY, 0)).y);
         if (editorPanelArea.contains(screenX, Gdx.graphics.getHeight() - screenY)) {
-            System.out.println("CLICKED THE EDITOR");
+            System.out.println("CLICKED THE EDITOR " + editWorldMousePos);
+            Vector2 editSpriteMousePos = editWorldMousePos.add(selectedRegion.getRegionWidth() * frameScale / 2, selectedRegion.getRegionHeight() * frameScale / 2).scl(1f / frameScale);
+            System.out.println("Mouse on Sprite: " + editSpriteMousePos);
+            setFrameOrigin(editSpriteMousePos);
         }
         if (animatorPanelArea.contains(screenX, Gdx.graphics.getHeight() - screenY)) {
-            System.out.println("CLICKED THE ANIMATOR");
+            System.out.println("CLICKED THE ANIMATOR" + animationWorldMousePos);
         }
-        System.out.println(animationCamera.unproject(new Vector3(screenX, screenY, 0)));
         return false;
+    }
+
+    public void setFrameOrigin(Vector2 spritePos) {
+        int lastSelected = 0;
+        AnimagicAnimationData meta = new AnimagicAnimationData();
+        for (int i = 0; i < currentAnimation.totalFrames(); i++) {
+            if (selectedRegion == currentAnimation.getFrames()[i]) {
+                lastSelected = i;
+                meta.put(i, new AnimagicTextureData((int) spritePos.x, (int) spritePos.y));
+            } else meta.put(i, ((AnimagicTextureRegion) currentAnimation.getFrames()[i]).meta());
+        }
+        refreshCurrentAnimation(meta, lastSelected);
+    }
+
+    public void refreshCurrentAnimation(AnimagicAnimationData meta, int lastSelected) {
+        java.util.List<AnimagicTextureRegion> refreshedRegions = new ArrayList<>();
+
+        for (int i = 0; i < currentAnimation.totalFrames(); i++) {
+            AnimagicTextureData frameMeta = meta.get(i);
+            if (frameMeta == null) frameMeta = ((AnimagicTextureRegion) currentAnimation.getFrames()[i]).meta();
+            refreshedRegions.add(new AnimagicTextureRegion((AnimagicTextureRegion) currentAnimation.getFrames()[i], frameMeta));
+        }
+
+        currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), refreshedRegions.toArray(new TextureRegion[refreshedRegions.size()]));
+
+        selectedRegion = (AnimagicTextureRegion) currentAnimation.getFrames()[lastSelected];
+        buildUI();
     }
 }
