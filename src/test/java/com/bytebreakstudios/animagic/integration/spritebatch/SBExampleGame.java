@@ -3,28 +3,27 @@ package com.bytebreakstudios.animagic.integration.spritebatch;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 import com.bytebreakstudios.animagic.texture.AnimagicSpriteBatch;
 import com.bytebreakstudios.animagic.texture.AnimagicTextureRegion;
+import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
 
 public class SBExampleGame extends Game {
-    AnimagicSpriteBatch spriteBatchA;
-    SpriteBatch spriteBatchB;
-    AnimagicTextureRegion texture;
+    AnimagicSpriteBatch spriteBatch;
+    AnimagicTextureRegion texture0;
+    AnimagicTextureRegion texture1;
     Camera camera;
 
     @Override
     public void create() {
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.lookAt(0, 0, 0);
-        spriteBatchA = new AnimagicSpriteBatch(camera);
-        spriteBatchB = new SpriteBatch();
+        spriteBatch = new AnimagicSpriteBatch(camera);
 
-
-        texture = new AnimagicTextureRegion(new Texture("textures/spark.png"), new Texture("textures/spark_n.png"), 0, 0, 180, 180);
-        texture.meta.xOffset = -90;
-        texture.meta.yOffset = -90;
+        texture0 = new AnimagicTextureRegion(new Texture("textures/bum.png"), new Texture("textures/bum_n.png"), new AnimagicTextureData(400, 200));
+        texture1 = new AnimagicTextureRegion(new TextureRegion(new Texture("textures/bum_prime.png"), 100, 200, 400, 400),
+                new TextureRegion(new Texture("textures/bum_prime_n.png"), 100, 0, 400, 400), new AnimagicTextureData(0, 200));
     }
 
     @Override
@@ -38,18 +37,16 @@ public class SBExampleGame extends Game {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 
-        spriteBatchA.begin();
+        spriteBatch.begin();
 
-        spriteBatchA.setAmbientColor(Color.WHITE);
-        spriteBatchA.setAmbientIntensity(0.3f);
-        spriteBatchA.setNextLight(mousePos.x, mousePos.y, 0.1f, 0.9f, Color.RED);
-        spriteBatchA.setNextLight(-mousePos.x, -mousePos.y, 0.5f, 1, Color.GREEN);
+        spriteBatch.setAmbientColor(Color.WHITE);
+        spriteBatch.setAmbientIntensity(0.01f);
+        spriteBatch.setNextLight(mousePos.x, mousePos.y, 0.1f, 0.9f, Color.RED);
+        spriteBatch.setNextLight(-mousePos.x, -mousePos.y, 0.5f, 1, Color.GREEN);
 
-        spriteBatchA.draw(texture, 0, 0);
-        spriteBatchA.end();
 
-        spriteBatchB.begin();
-        spriteBatchB.draw(texture, Gdx.graphics.getWidth() - texture.getTexture().getWidth(), Gdx.graphics.getHeight() - texture.getTexture().getHeight());
-        spriteBatchB.end();
+        spriteBatch.draw(texture1, 0, 0, 400, 400);
+        spriteBatch.draw(texture0, 0, 0, 400, 400);
+        spriteBatch.end();
     }
 }

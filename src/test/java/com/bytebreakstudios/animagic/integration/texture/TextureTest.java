@@ -5,15 +5,30 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.utils.Array;
-import com.bytebreakstudios.animagic.texture.*;
-import com.bytebreakstudios.animagic.utils.FileUtils;
+import com.bytebreakstudios.animagic.texture.AnimagicTextureAtlas;
+import com.bytebreakstudios.animagic.texture.AnimagicTextureAtlasLoader;
+import com.bytebreakstudios.animagic.texture.AnimagicTextureRegion;
+import com.bytebreakstudios.animagic.texture.data.AnimagicAnimationData;
+import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Test class for Animation Metadata. Done inside a Game instance to make use of the assetManager
- * Created by Monday on 11/30/2015.
  */
 public class TextureTest extends Game {
     AssetManager assetManager;
+    AnimagicAnimationData data;
+
+    List<String> failures = new ArrayList<>();
+
+    public void setupTextureData() {
+        data = new AnimagicAnimationData();
+        for (int i = 0; i < 9; i++) data.put(i, new AnimagicTextureData(i, i));
+    }
+
+
     @Override
     public void create() {
         assetManager = new AssetManager();
@@ -22,53 +37,41 @@ public class TextureTest extends Game {
         assetManager.load("packed/character.atlas", AnimagicTextureAtlas.class);
         assetManager.finishLoading();
 
-        saveTestMeta();
+        setupTextureData();
+
         loadTestMetaAllFrames();
         loadTestMetaOneFrame();
+
+        System.err.println("Failures: " + failures.size());
+        failures.forEach(System.err::println);
 
         Gdx.app.exit();
     }
 
-    public void saveTestMeta() {
-        AnimagicAnimationData animationData = new AnimagicAnimationData();
-        AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
-        Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithoutMeta("kick");
-        for (int i = 0; i < kickFrames.size; i++) {
-            AnimagicTextureData frameMeta = new AnimagicTextureData();
-            frameMeta.xOffset = i;
-            frameMeta.yOffset = i;
-            animationData.frameData.add(frameMeta);
-        }
-        FileUtils.saveToFile(animationData, "packed/meta/character.kick.meta");
-    }
-
     public void loadTestMetaAllFrames() {
         AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
-        Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithMeta("kick");
-        for (int i = 0; i < kickFrames.size; i++) {
-            AnimagicTextureRegion frame = kickFrames.get(i);
-            if (frame.getOffset().x != i) {
-                throw new RuntimeException("xOffset is wrong: " + frame.getOffset().x + " instead of expected " + i);
-            }
-            if (frame.getOffset().y != i) {
-                throw new RuntimeException("yOffset is wrong: " + frame.getOffset().y + " instead of expected " + i);
-            }
+        Array<AnimagicTextureRegion> kickFrames = atlas.findRegions("kick");
+        AnimagicAnimationData realData = new AnimagicAnimationData();
+        for (int i = 0; i < kickFrames.size; i++) realData.put(i, kickFrames.get(i).meta());
+        if (!data.equals(realData)) {
+            failures.add("loadTestMetaAllFrames: ");
+            failures.add(data.toString());
+            failures.add(realData.toString());
         }
     }
 
     public void loadTestMetaOneFrame() {
-        int frameNumber = 5;
-        int offset = frameNumber - 1;
+        int frameNumber = 1;
+        int frameIndex = frameNumber - 1;
         AnimagicTextureAtlas atlas = assetManager.get("packed/character.atlas", AnimagicTextureAtlas.class);
-        Array<AnimagicTextureRegion> kickFrames = atlas.findRegionsWithMeta("kick/" + frameNumber);
-        for (int i = 0; i < kickFrames.size; i++) {
-            AnimagicTextureRegion frame = kickFrames.get(i);
-            if (frame.getOffset().x != offset) {
-                throw new RuntimeException("xOffset is wrong: " + frame.getOffset().x + " instead of expected " + offset);
-            }
-            if (frame.getOffset().y != offset) {
-                throw new RuntimeException("yOffset is wrong: " + frame.getOffset().y + " instead of expected " + offset);
-            }
+        AnimagicTextureRegion kickFrame = atlas.findRegion("kick", frameNumber, false);
+
+        AnimagicTextureData expectedData = data.get(frameIndex);
+        AnimagicTextureData actualData = kickFrame.meta();
+        if (!expectedData.equals(actualData)) {
+            failures.add("loadTestMetaOneFrame: ");
+            failures.add(data.get(frameIndex).toString());
+            failures.add(kickFrame.meta().toString());
         }
     }
 }

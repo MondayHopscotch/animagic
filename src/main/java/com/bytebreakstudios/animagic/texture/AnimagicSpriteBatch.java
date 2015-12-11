@@ -5,6 +5,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -112,38 +113,51 @@ public class AnimagicSpriteBatch extends SpriteBatch {
     }
 
 
-    private Vector2 preDraw(AnimagicTextureRegion region, float x, float y) {
-        if (region.getNormalTexture() != null) {
-            this.flush();
-            region.getNormalTexture().bind(1);
+    private Vector2 preDraw(TextureRegion region, float x, float y, float width, float height) {
+        Vector2 pos = new Vector2(x, y);
+        if (region instanceof AnimagicTextureRegion) {
+            AnimagicTextureRegion aRegion = (AnimagicTextureRegion) region;
+            if (aRegion.getNormalTextureRegion() != null) {
+                this.flush();
+                aRegion.getNormalTextureRegion().getTexture().bind(1);
+
+                ShaderProgram p = getShader();
+                p.setUniformf("xCoordMin", aRegion.shaderData.xCoordMin);
+                p.setUniformf("xCoordDiff", aRegion.shaderData.xCoordDiff);
+                p.setUniformf("yCoordMin", aRegion.shaderData.yCoordMin);
+                p.setUniformf("yCoordDiff", aRegion.shaderData.yCoordDiff);
+                p.setUniformf("xNorCoordMin", aRegion.shaderData.xNorCoordMin);
+                p.setUniformf("xNorCoordDiff", aRegion.shaderData.xNorCoordDiff);
+                p.setUniformf("yNorCoordMin", aRegion.shaderData.yNorCoordMin);
+                p.setUniformf("yNorCoordDiff", aRegion.shaderData.yNorCoordDiff);
+            }
+            region.getTexture().bind(0);
+            pos = pos.sub(width * aRegion.getOriginPercentageX(), height * aRegion.getOriginPercentageY());
         }
-        region.getTexture().bind(0);
-        Vector2 offset = region.getOffset();
-        offset.add(x, y);
-        return offset;
+        return pos;
     }
 
 
-    public void draw(AnimagicTextureRegion region, float x, float y) {
-        Vector2 pos = preDraw(region, x, y);
+    public void draw(TextureRegion region, float x, float y) {
+        Vector2 pos = preDraw(region, x, y, region.getRegionWidth(), region.getRegionHeight());
         super.draw(region, pos.x, pos.y);
     }
 
 
-    public void draw(AnimagicTextureRegion region, float x, float y, float width, float height) {
-        Vector2 pos = preDraw(region, x, y);
+    public void draw(TextureRegion region, float x, float y, float width, float height) {
+        Vector2 pos = preDraw(region, x, y, width, height);
         super.draw(region, pos.x, pos.y, width, height);
     }
 
 
-    public void draw(AnimagicTextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation) {
-        Vector2 pos = preDraw(region, x, y);
+    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation) {
+        Vector2 pos = preDraw(region, x, y, width, height);
         super.draw(region, pos.x, pos.y, originX, originY, width, height, scaleX, scaleY, rotation);
     }
 
 
-    public void draw(AnimagicTextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, boolean clockwise) {
-        Vector2 pos = preDraw(region, x, y);
+    public void draw(TextureRegion region, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, boolean clockwise) {
+        Vector2 pos = preDraw(region, x, y, width, height);
         super.draw(region, pos.x, pos.y, originX, originY, width, height, scaleX, scaleY, rotation, clockwise);
     }
 

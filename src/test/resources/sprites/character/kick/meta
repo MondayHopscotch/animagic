@@ -1,30 +1,38 @@
 {
-  "frameData" : [ "java.util.ArrayList", [ {
-    "xOffset" : 0,
-    "yOffset" : 0
-  }, {
-    "xOffset" : 1,
-    "yOffset" : 1
-  }, {
-    "xOffset" : 2,
-    "yOffset" : 2
-  }, {
-    "xOffset" : 3,
-    "yOffset" : 3
-  }, {
-    "xOffset" : 4,
-    "yOffset" : 4
-  }, {
-    "xOffset" : 5,
-    "yOffset" : 5
-  }, {
-    "xOffset" : 6,
-    "yOffset" : 6
-  }, {
-    "xOffset" : 7,
-    "yOffset" : 7
-  }, {
-    "xOffset" : 8,
-    "yOffset" : 8
-  } ] ]
+    "0": {
+        "originX" : 0,
+        "originY" : 0
+    },
+    "1": {
+        "originX" : 1,
+        "originY" : 1
+    },
+    "2": {
+        "originX" : 20,
+        "originY" : 20
+    },
+    "3": {
+        "originX" : 3,
+        "originY" : 3
+    },
+    "4": {
+        "originX" : 4,
+        "originY" : 4
+    },
+    "5": {
+        "originX" : 25,
+        "originY" : 25
+    },
+    "6": {
+        "originX" : 6,
+        "originY" : 6
+    },
+    "7": {
+        "originX" : 7,
+        "originY" : 7
+    },
+    "8": {
+        "originX" : 8,
+        "originY" : 8
+    }
 }

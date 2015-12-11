@@ -1,11 +1,16 @@
 package com.bytebreakstudios.animagic.texture;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
-import com.bytebreakstudios.animagic.utils.FileUtils;
+import com.bytebreakstudios.animagic.texture.data.AnimagicAnimationData;
+import com.bytebreakstudios.animagic.texture.data.AnimagicAtlasData;
+import com.bytebreakstudios.animagic.texture.data.AnimagicTextureData;
+import com.bytebreakstudios.animagic.utils.SerializationUtils;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -13,117 +18,151 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by Monday on 11/12/2015.
- */
-public class AnimagicTextureAtlas extends TextureAtlas {
-    final static Pattern lastIntPattern = Pattern.compile("[^0-9]+([0-9]+)$");
+public class AnimagicTextureAtlas {
+    private static final Pattern LAST_INT_PATTERN = Pattern.compile("[^0-9]+(_?[0-9]+)$");
 
+    private static final Texture flatNormalMap;
     private static final ObjectMapper mapper = new ObjectMapper();
     static {
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.enableDefaultTyping();
+
+        Pixmap p = new Pixmap(2, 2, Pixmap.Format.RGBA8888);
+        p.setColor(.5f, .5f, 1, 1);
+        p.fill();
+        flatNormalMap = new Texture(p);
+        p.dispose();
     }
 
-    private FileHandle atlasFile;
-    private AnimagicAnimationData metaFile;
 
-    public AnimagicTextureAtlas(TextureAtlasData data, FileHandle file) {
-        super(data);
-        atlasFile = file;
+    private final TextureAtlas atlas;
+    private AnimagicAtlasData meta;
+
+    public AnimagicTextureAtlas(String internalPackFile) {
+        atlas = new TextureAtlas(internalPackFile);
+        findMetaFile(internalPackFile);
     }
 
-    public Array<AnimagicTextureRegion> findRegionsWithoutMeta(String name) {
-        return loadAnimagicRegions(name, false);
+    public AnimagicTextureAtlas(FileHandle packFile) {
+        atlas = new TextureAtlas(packFile);
+        findMetaFile(packFile);
     }
 
-    public Array<AnimagicTextureRegion> findRegionsWithMeta(String name) {
-        return loadAnimagicRegions(name, true);
+    public AnimagicTextureAtlas(FileHandle packFile, boolean flip) {
+        atlas = new TextureAtlas(packFile, flip);
+        findMetaFile(packFile);
     }
 
-    private Array<AnimagicTextureRegion> loadAnimagicRegions(String name, boolean withMetaData) {
-        setMetaFile(name);
-        Array<AtlasRegion> regions = super.findRegions(name);
+    public Array<AnimagicTextureRegion> findRegions(String name) {
+        Array<TextureAtlas.AtlasRegion> regions = atlas.findRegions(name);
         Array<AnimagicTextureRegion> animagicRegions = new Array<>();
-        if (regions.size > 0) {
-            for(AtlasRegion region : regions) {
-                AnimagicTextureRegion animagicRegion = new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888));
-                if (withMetaData) {
-                    animagicRegion.meta = loadMetaForRegion(name);
-                }
-                animagicRegions.add(animagicRegion);
+
+        if (regions == null || regions.size <= 0) {
+            AnimagicTextureRegion region = findRegion(name, 0);
+            boolean zeroBased = false;
+            if (region != null) {
+                animagicRegions.add(region);
+                zeroBased = true;
             }
-            return animagicRegions;
-        } else {
             int i = 1;
-            String regionName;
             while (true) {
-                regionName = name + "/" + i;
-                AtlasRegion region = super.findRegion(regionName);
+                region = findRegion(name, i, zeroBased);
                 if (region == null) {
                     break;
                 } else {
-                    AnimagicTextureRegion animagicRegion = new AnimagicTextureRegion(region, new Texture(0, 0, Pixmap.Format.RGBA8888));
-                    if (withMetaData) {
-                        animagicRegion.meta = loadMetaForRegion(i);
-                    }
-                    animagicRegions.add(animagicRegion);
+                    animagicRegions.add(region);
                 }
                 i++;
             }
             return animagicRegions;
-        }
-    }
-
-    private void setMetaFile(String name) {
-        if (name.matches(".*\\d+$")) {
-            name = name.substring(0, name.lastIndexOf("/"));
-        }
-
-        FileHandle packedMeta = atlasFile.parent().child(getPackedMetaFileName(name));
-        if (packedMeta.exists()) {
-            // load meta file
-            metaFile = FileUtils.loadFileAs(AnimagicAnimationData.class, packedMeta.file());
         } else {
-            metaFile = null;
+            for (int i = 0; i < regions.size; i++) {
+                animagicRegions.add(new AnimagicTextureRegion(regions.get(i), getNormal(name, i), getMeta(name, i)));
+            }
+            return animagicRegions;
         }
     }
 
-    private AnimagicTextureData loadMetaForRegion(int frame) {
-        //make it zero-based
-        frame -= 1;
-        AnimagicTextureData data = new AnimagicTextureData();
-        if (metaFile != null) {
-            if (frame >= 0 && metaFile.frameData.size() > frame) {
-                data = metaFile.frameData.get(frame);
+    public AnimagicTextureRegion findRegion(String name) {
+        TextureAtlas.AtlasRegion region = atlas.findRegion(name);
+        if (region != null)
+            return new AnimagicTextureRegion(region, getNormal(name, 0), getMeta(name, 0));
+        else return null;
+    }
+
+    public AnimagicTextureRegion findRegion(String name, int index) {
+        return findRegion(name, index, true);
+    }
+
+    public AnimagicTextureRegion findRegion(String name, int index, boolean zeroBased) {
+        TextureRegion tex = getRegion(name, index);
+        if (tex == null) return null;
+        TextureRegion nor = getNormal(name, index);
+        AnimagicTextureData meta = getMeta(name, (zeroBased ? index : index - 1));
+        return new AnimagicTextureRegion(tex, nor, meta);
+    }
+
+    private void findMetaFile(FileHandle atlasFile) {
+        FileHandle packedMeta = Gdx.files.internal(atlasFile.pathWithoutExtension() + ".meta");
+        if (packedMeta.exists() && !packedMeta.isDirectory()) {
+            meta = SerializationUtils.fromJson(AnimagicAtlasData.class, packedMeta.readString());
+        }
+        if (meta == null) System.err.println("Could not find: " + packedMeta);
+    }
+
+    private void findMetaFile(String atlasLocation) {
+        findMetaFile(Gdx.files.internal(atlasLocation));
+    }
+
+    private AnimagicTextureData getMeta(String name, int frameIndex) {
+        if (meta != null) {
+            String nameWithNoIndex = trimTrailingNumber(name);
+            AnimagicAnimationData animData = meta.get(nameWithNoIndex);
+            if (animData != null) {
+                return animData.get(frameIndex);
             }
         }
-        return data;
+        return new AnimagicTextureData(0, 0);
     }
 
-    private AnimagicTextureData loadMetaForRegion(String name) {
-        int frame = -1;
-        if (metaFile != null) {
-            if (name.matches(".*\\d+$")) {
-                frame = extractTrailingNumber(name);
+    private TextureRegion getNormal(String name, int frameIndex) {
+        TextureRegion region = getRegion(name + "_n", frameIndex);
+        if (region == null) {
+            region = getRegion(name + "-n", frameIndex);
+            if (region == null) {
+                region = getRegion(name + "_normal", frameIndex);
+                if (region == null) {
+                    region = getRegion(name + "_normals", frameIndex);
+                    if (region == null) {
+                        region = getRegion(name + "-normal", frameIndex);
+                        if (region == null) {
+                            region = getRegion(name + "-normals", frameIndex);
+                            if (region == null) return new TextureRegion(flatNormalMap, 0, 0, 1, 1);
+                        }
+                    }
+                }
             }
         }
-        return loadMetaForRegion(frame);
+        return region;
     }
 
-    private int extractTrailingNumber(String text) {
-        int number = -1;
-        Matcher matcher = lastIntPattern.matcher(text);
+    private TextureRegion getRegion(String name, int index) {
+        TextureAtlas.AtlasRegion region = atlas.findRegion(name, index);
+        if (region == null) {
+            region = atlas.findRegion(name + "/" + index);
+            if (region == null) {
+                region = atlas.findRegion(name + "/" + (index < 10 ? "0" + index : index));
+            }
+        }
+        return region;
+    }
+
+    private String trimTrailingNumber(String text) {
+        Matcher matcher = LAST_INT_PATTERN.matcher(text);
         if (matcher.find()) {
-            String someNumberStr = matcher.group(1);
-            number = Integer.parseInt(someNumberStr);
+            return matcher.group(0);
         }
-        return number;
-    }
-
-    private String getPackedMetaFileName(String name) {
-        String metaFileName = "meta" + "/" + atlasFile.nameWithoutExtension() + "." + name + ".meta";
-        return metaFileName;
+        return text;
     }
 }
