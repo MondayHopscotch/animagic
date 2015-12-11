@@ -8,11 +8,11 @@ import java.nio.channels.FileChannel;
 
 /**
  * Simple utility class that allows objects to be saved to file / loaded from file via JSON.
- * @author MondayHopscotch
  */
 public class FileUtils {
 
     private static String nextSaveDir = null;
+    private static String lastDirectory = null;
 
     public static String saveToFile(Object obj) {
         return saveToFile(SerializationUtils.toJson(obj));
@@ -84,6 +84,30 @@ public class FileUtils {
                 } catch (IOException e) {
                 }
             }
+        }
+        return null;
+    }
+
+    public static String selectDirectory() {
+        if (lastDirectory == null) {
+            lastDirectory = ".";
+        }
+        JFileChooser fileChooser = new JFileChooser(lastDirectory) {
+            @Override
+            protected JDialog createDialog(Component parent) throws HeadlessException {
+                JDialog dialog = super.createDialog(parent);
+                dialog.setAlwaysOnTop(true);
+                dialog.setModalityType(ModalityType.APPLICATION_MODAL);
+                dialog.setModal(true);
+                return dialog;
+            }
+        };
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setDialogTitle("Select Directory");
+        fileChooser.setApproveButtonText("Select");
+        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            lastDirectory = fileChooser.getSelectedFile().getPath();
+            return lastDirectory;
         }
         return null;
     }

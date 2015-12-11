@@ -131,6 +131,8 @@ public class Animation implements IFrameByFrameAnimation {
         return textures[getFrameIndex()];
     }
 
+    public TextureRegion[] getFrames(){ return textures; }
+
     public float percentComplete(){
         if (currentDuration == 0) return 0;
         else if (currentDuration >= totalDuration()) return 1;
