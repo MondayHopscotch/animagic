@@ -21,9 +21,9 @@ public class SBExampleGame extends Game {
         camera.lookAt(0, 0, 0);
         spriteBatch = new AnimagicSpriteBatch(camera);
 
-        texture0 = new AnimagicTextureRegion(new Texture("textures/bum.png"), new Texture("textures/bum_n.png"), new AnimagicTextureData(200, 200));
+        texture0 = new AnimagicTextureRegion(new Texture("textures/bum.png"), new Texture("textures/bum_n.png"), new AnimagicTextureData(400, 200));
         texture1 = new AnimagicTextureRegion(new TextureRegion(new Texture("textures/bum_prime.png"), 100, 200, 400, 400),
-                new TextureRegion(new Texture("textures/bum_prime_n.png"), 100, 0, 400, 400), new AnimagicTextureData(200, 200));
+                new TextureRegion(new Texture("textures/bum_prime_n.png"), 100, 0, 400, 400), new AnimagicTextureData(0, 200));
     }
 
     @Override
@@ -41,12 +41,12 @@ public class SBExampleGame extends Game {
 
         spriteBatch.setAmbientColor(Color.WHITE);
         spriteBatch.setAmbientIntensity(0.01f);
-        spriteBatch.setNextLight(mousePos.x, mousePos.y, 0.2f, 0.6f, Color.WHITE);
-        //spriteBatchA.setNextLight(-mousePos.x, -mousePos.y, 0.5f, 1, Color.GREEN);
+        spriteBatch.setNextLight(mousePos.x, mousePos.y, 0.1f, 0.9f, Color.RED);
+        spriteBatch.setNextLight(-mousePos.x, -mousePos.y, 0.5f, 1, Color.GREEN);
 
 
-        spriteBatch.draw(texture1, 0, -200, 400, 400);
-        spriteBatch.draw(texture0, -400, -200, 400, 400);
+        spriteBatch.draw(texture1, 0, 0, 400, 400);
+        spriteBatch.draw(texture0, 0, 0, 400, 400);
         spriteBatch.end();
     }
 }
