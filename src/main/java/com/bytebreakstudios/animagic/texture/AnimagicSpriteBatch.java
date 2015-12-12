@@ -39,6 +39,10 @@ public class AnimagicSpriteBatch extends SpriteBatch {
         return this;
     }
 
+    public Camera getCamera() {
+        return camera;
+    }
+
 
     private ShaderProgram createShader() {
         FileHandle vertex = Gdx.files.internal("vertex.glsl");
