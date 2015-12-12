@@ -60,6 +60,7 @@ public class EditorScreen extends InputAdapter implements Screen {
 
     private float frameScale = 1;
     private float animationScale = 1;
+    private float animationSpeedScale = 1;
 
     public EditorScreen() {
         animationCamera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -116,9 +117,9 @@ public class EditorScreen extends InputAdapter implements Screen {
         }
         System.out.println("Found " + frames.size() + " frames");
         if (frames.size() > 0) {
-            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), frames.toArray(new AnimagicTextureRegion[frames.size()]));
+            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f * animationSpeedScale), frames.toArray(new AnimagicTextureRegion[frames.size()]));
         } else {
-            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), new AnimagicTextureRegion[]{new AnimagicTextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888), null)});
+            newAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f * animationSpeedScale), new AnimagicTextureRegion[]{new AnimagicTextureRegion(new Texture(0, 0, Pixmap.Format.RGBA8888), null)});
         }
         currentAnimation = newAnimation;
         if (currentAnimation.totalFrames() > 0)
@@ -278,6 +279,12 @@ public class EditorScreen extends InputAdapter implements Screen {
         else if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) frameScale *= .9f;
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT_BRACKET)) animationScale *= 1.1f;
         else if (Gdx.input.isKeyPressed(Input.Keys.LEFT_BRACKET)) animationScale *= .9f;
+        if (Gdx.input.isKeyPressed(Input.Keys.APOSTROPHE)) {
+            animationSpeedScale *= 1.2f;
+            refreshCurrentAnimation();
+        } else if (Gdx.input.isKeyPressed(Input.Keys.COLON)) {
+            animationSpeedScale *= .8f;
+        }
 
         if (animationPanel != null) {
             renderAnimationPanel(delta);
@@ -430,9 +437,21 @@ public class EditorScreen extends InputAdapter implements Screen {
             refreshedRegions.add(new AnimagicTextureRegion((AnimagicTextureRegion) currentAnimation.getFrames()[i], frameMeta));
         }
 
-        currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f), refreshedRegions.toArray(new TextureRegion[refreshedRegions.size()]));
+        currentAnimation = new Animation("editorAnimation", Animation.AnimationPlayState.REPEAT, FrameRate.perFrame(.1f * animationSpeedScale), refreshedRegions.toArray(new TextureRegion[refreshedRegions.size()]));
 
         selectedRegion = (AnimagicTextureRegion) currentAnimation.getFrames()[lastSelected];
         buildUI();
+    }
+
+    public void refreshCurrentAnimation() {
+        int lastSelected = 0;
+        AnimagicAnimationData meta = new AnimagicAnimationData();
+        for (int i = 0; i < currentAnimation.totalFrames(); i++) {
+            if (selectedRegion == currentAnimation.getFrames()[i]) {
+                lastSelected = i;
+            }
+            meta.put(i, ((AnimagicTextureRegion) currentAnimation.getFrames()[i]).meta());
+        }
+        refreshCurrentAnimation(meta, lastSelected);
     }
 }
