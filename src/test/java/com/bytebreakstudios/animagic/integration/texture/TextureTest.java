@@ -26,6 +26,8 @@ public class TextureTest extends Game {
     public void setupTextureData() {
         data = new AnimagicAnimationData();
         for (int i = 0; i < 9; i++) data.put(i, new AnimagicTextureData(i, i));
+        data.put(2, new AnimagicTextureData(20, 20));
+        data.put(5, new AnimagicTextureData(25, 25));
     }
 
 
