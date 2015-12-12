@@ -18,7 +18,6 @@ public class AnimagicSpriteBatch extends SpriteBatch {
 
     private Camera camera;
 
-
     public AnimagicSpriteBatch(Camera camera) {
         super();
         this.setCamera(camera);
@@ -29,9 +28,13 @@ public class AnimagicSpriteBatch extends SpriteBatch {
             throw new RuntimeException("The array of light objects cannot differ in length from the MAX_LIGHTS constant");
     }
 
+    public AnimagicSpriteBatch(){
+        this(null);
+    }
+
 
     public AnimagicSpriteBatch setCamera(Camera camera) {
-        if (camera == null) throw new RuntimeException("Cannot set the AnimagicSpriteBatch.camera with a null camera");
+        //if (camera == null) throw new RuntimeException("Cannot set the AnimagicSpriteBatch.camera with a null camera");
         this.camera = camera;
         return this;
     }
@@ -107,7 +110,7 @@ public class AnimagicSpriteBatch extends SpriteBatch {
 
     @Override
     public void begin() {
-        setProjectionMatrix(camera.combined);
+        if (camera != null) setProjectionMatrix(camera.combined);
         super.begin();
         resetLights();
     }

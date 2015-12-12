@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public class AnimagicTextureAtlas {
     private static final Pattern LAST_INT_PATTERN = Pattern.compile("[^0-9]+(_?[0-9]+)$");
 
-    private static final Texture flatNormalMap;
+    public static final Texture flatNormalMap;
     private static final ObjectMapper mapper = new ObjectMapper();
     static {
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
