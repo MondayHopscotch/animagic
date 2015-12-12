@@ -279,12 +279,6 @@ public class EditorScreen extends InputAdapter implements Screen {
         else if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) frameScale *= .9f;
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT_BRACKET)) animationScale *= 1.1f;
         else if (Gdx.input.isKeyPressed(Input.Keys.LEFT_BRACKET)) animationScale *= .9f;
-        if (Gdx.input.isKeyPressed(Input.Keys.APOSTROPHE)) {
-            animationSpeedScale *= 1.2f;
-            refreshCurrentAnimation();
-        } else if (Gdx.input.isKeyPressed(Input.Keys.COLON)) {
-            animationSpeedScale *= .8f;
-        }
 
         if (animationPanel != null) {
             renderAnimationPanel(delta);
@@ -411,7 +405,14 @@ public class EditorScreen extends InputAdapter implements Screen {
             setFrameOrigin(editSpriteMousePos);
         }
         if (animatorPanelArea.contains(screenX, Gdx.graphics.getHeight() - screenY)) {
-            System.out.println("CLICKED THE ANIMATOR" + animationWorldMousePos);
+            System.out.println("CLICKED THE ANIMATOR" + animationWorldMousePos + " " + button + " " + pointer);
+            if (button == 1) {
+                animationSpeedScale *= 1.2f;
+                refreshCurrentAnimation();
+            } else if (button == 0) {
+                animationSpeedScale *= .8f;
+                refreshCurrentAnimation();
+            }
         }
         return false;
     }
