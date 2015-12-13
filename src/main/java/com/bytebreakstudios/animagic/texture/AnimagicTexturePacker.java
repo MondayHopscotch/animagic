@@ -74,8 +74,13 @@ public final class AnimagicTexturePacker {
                 System.exit(2);
             } else if (metaFiles.length == 1) {
                 File metaFile = metaFiles[0];
-                AnimagicAnimationData animData = FileUtils.loadFileAs(AnimagicAnimationData.class, metaFile);
-                data.put(newPath.toString("/"), animData);
+                try {
+                    AnimagicAnimationData animData = FileUtils.loadFileAs(AnimagicAnimationData.class, metaFile);
+                    data.put(newPath.toString("/"), animData);
+                } catch (Exception e) {
+                    System.err.println("Failed to copy meta file '" + metaFile.getAbsolutePath() + "'");
+                    throw e;
+                }
             }
         }
     }
