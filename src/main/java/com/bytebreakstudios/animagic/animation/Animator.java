@@ -34,6 +34,17 @@ public class Animator {
         return false;
     }
 
+    public IFrameByFrameAnimation getAnimationByName(String animationName){
+        for (IFrameByFrameAnimation animation : animations){
+            if (animation instanceof Animation && ((Animation)animation).name().equalsIgnoreCase(animationName)){
+                return animation;
+            } else if (animation instanceof AnimationBlend && ((AnimationBlend)animation).hasAnimation(animationName)){
+                return animation;
+            }
+        }
+        return null;
+    }
+
     public Animator switchToAnimation(String animationName){
         if (!hasAnimation(animationName))
             throw new AnimagicException(name + ": Animator does not have an animation by the name: " + animationName);

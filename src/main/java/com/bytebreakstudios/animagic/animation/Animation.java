@@ -147,6 +147,11 @@ public class Animation implements IFrameByFrameAnimation {
         return this;
     }
 
+    public Animation stopListening(AnimationListener listener){
+        if (listeners.contains(listener)) listeners.remove(listener);
+        return this;
+    }
+
     private void notify(AnimationListenerState listenerState){
         for (AnimationListener listener : listeners) listener.animationNotification(this, listenerState);
     }
