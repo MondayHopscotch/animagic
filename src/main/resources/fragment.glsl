@@ -52,146 +52,67 @@ uniform float xNorCoordDiff;
 uniform float yNorCoordMin;
 uniform float yNorCoordDiff;
 
+vec3 calculateLight(vec2 texCoord,
+                    vec3 light,
+                    vec3 normal,
+                    vec2 resolution,
+                    float attenuation,
+                    bool useShadow,
+                    vec3 lightColor,
+                    vec4 vertexColor,
+                    vec4 textureColor);
+
 void main() {
     vec2 norCoords = vec2(xNorCoordMin + (((v_texCoords.x - xCoordMin) / xCoordDiff) * xNorCoordDiff),
                           yNorCoordMin + (((v_texCoords.y - yCoordMin) / yCoordDiff) * yNorCoordDiff));
-
     vec4 color = texture2D(u_texture, v_texCoords);
     vec3 nColor = texture2D(u_normals, norCoords).rgb;
-
     //some bump map programs will need the Y value flipped..
     nColor.g = yInvert ? 1.0 - nColor.g : nColor.g;
-
     //this is for debugging purposes, allowing us to lower the intensity of our bump map
     vec3 nBase = vec3(1.0, 1.0, 1.0);
     nColor = mix(nBase, nColor, strength);
-
     //normals need to be converted to [-1.0, 1.0] range and normalized
     vec3 normal = normalize(nColor * 2.0 - 1.0);
+    vec3 ambient = vec3(ambientColor * ambientIntensity);
+    if (useNormals){
+        vec3 additiveBlending =
+            ambient +
+            calculateLight(v_texCoords.xy, light0, normal, resolution, attenuation0, useShadow, lightColor0, v_color, color) +
+            calculateLight(v_texCoords.xy, light1, normal, resolution, attenuation1, useShadow, lightColor1, v_color, color) +
+            calculateLight(v_texCoords.xy, light2, normal, resolution, attenuation2, useShadow, lightColor2, v_color, color) +
+            calculateLight(v_texCoords.xy, light3, normal, resolution, attenuation3, useShadow, lightColor3, v_color, color) +
+            calculateLight(v_texCoords.xy, light4, normal, resolution, attenuation4, useShadow, lightColor4, v_color, color) +
+            calculateLight(v_texCoords.xy, light5, normal, resolution, attenuation5, useShadow, lightColor5, v_color, color) +
+            calculateLight(v_texCoords.xy, light6, normal, resolution, attenuation6, useShadow, lightColor6, v_color, color) +
+            calculateLight(v_texCoords.xy, light7, normal, resolution, attenuation7, useShadow, lightColor7, v_color, color) +
+            calculateLight(v_texCoords.xy, light8, normal, resolution, attenuation8, useShadow, lightColor8, v_color, color) +
+            calculateLight(v_texCoords.xy, light9, normal, resolution, attenuation9, useShadow, lightColor9, v_color, color);
+        gl_FragColor = vec4(additiveBlending, color.a);
+    } else {
+        gl_FragColor = color;
+    }
+}
 
-    vec4 ambient = vec4(ambientColor * ambientIntensity, 0.0);
-
-    // ///////////////////////////////////////////////////
-    vec3 deltaPos = vec3( (light0.xy - gl_FragCoord.xy) / resolution.xy, light0.z );
+vec3 calculateLight(vec2 texCoord,
+                    vec3 light,
+                    vec3 normal,
+                    vec2 resolution,
+                    float attenuation,
+                    bool useShadow,
+                    vec3 lightColor,
+                    vec4 vertexColor,
+                    vec4 textureColor) {
+    vec3 deltaPos = vec3( (light.xy - texCoord) / resolution.xy, light.z );
 
     vec3 lightDir = normalize(deltaPos);
     float lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
 
     float d = sqrt(dot(deltaPos, deltaPos));
-    float att = useShadow ? 1.0 / ( attenuation0 + (attenuation0*d) + (attenuation0*d*d) ) : 1.0;
+    float att = useShadow ? 1.0 / ( attenuation + (attenuation*d) + (attenuation*d*d) ) : 1.0;
 
-    vec3 result = (lightColor0.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultA = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light1.xy - gl_FragCoord.xy) / resolution.xy, light1.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation1 + (attenuation1*d) + (attenuation1*d*d) ) : 1.0;
-
-    result = (lightColor1.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultB = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light2.xy - gl_FragCoord.xy) / resolution.xy, light2.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation2 + (attenuation2*d) + (attenuation2*d*d) ) : 1.0;
-
-    result = (lightColor2.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultC = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light3.xy - gl_FragCoord.xy) / resolution.xy, light3.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation3 + (attenuation3*d) + (attenuation3*d*d) ) : 1.0;
-
-    result = (lightColor3.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultD = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light4.xy - gl_FragCoord.xy) / resolution.xy, light4.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation4 + (attenuation4*d) + (attenuation4*d*d) ) : 1.0;
-
-    result = (lightColor4.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultE = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light5.xy - gl_FragCoord.xy) / resolution.xy, light5.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation5 + (attenuation5*d) + (attenuation5*d*d) ) : 1.0;
-
-    result = (lightColor5.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultF = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light6.xy - gl_FragCoord.xy) / resolution.xy, light6.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation6 + (attenuation6*d) + (attenuation6*d*d) ) : 1.0;
-
-    result = (lightColor6.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultG = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light7.xy - gl_FragCoord.xy) / resolution.xy, light7.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation7 + (attenuation7*d) + (attenuation7*d*d) ) : 1.0;
-
-    result = (lightColor7.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultH = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light8.xy - gl_FragCoord.xy) / resolution.xy, light8.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation8 + (attenuation8*d) + (attenuation8*d*d) ) : 1.0;
-
-    result = (lightColor8.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultI = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-    deltaPos = vec3( (light9.xy - gl_FragCoord.xy) / resolution.xy, light9.z );
-
-    lightDir = normalize(deltaPos);
-    lambert = useNormals ? clamp(dot(normal, lightDir), 0.0, 1.0) : 1.0;
-
-    d = sqrt(dot(deltaPos, deltaPos));
-    att = useShadow ? 1.0 / ( attenuation9 + (attenuation9*d) + (attenuation9*d*d) ) : 1.0;
-
-    result = (lightColor9.rgb * lambert) * att;
-    result *= color.rgb;
-    vec4 resultJ = v_color * vec4(result, color.a);
-    // ///////////////////////////////////////////////////
-
-    gl_FragColor = ambient + resultA + resultB + resultC + resultD + resultE + resultF + resultG + resultH + resultI + resultJ;
+    vec3 result = (lightColor.rgb * lambert) * att;
+    result *= textureColor.rgb;
+    result *= vertexColor.rgb;
+    return result;
 }

@@ -20,6 +20,7 @@ public class SBExampleGame extends Game {
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.lookAt(0, 0, 0);
         spriteBatch = new AnimagicSpriteBatch(camera);
+        spriteBatch.isShaderOn(true); // TODO: if screen is balck, change to false
 
         texture0 = new AnimagicTextureRegion(new Texture("textures/bum.png"), new Texture("textures/bum_n.png"), new AnimagicTextureData(400, 200));
         texture1 = new AnimagicTextureRegion(new TextureRegion(new Texture("textures/bum_prime.png"), 100, 200, 400, 400),
