@@ -11,8 +11,8 @@ public class Animation implements IFrameByFrameAnimation {
     private List<AnimationListener> listeners = new ArrayList<>();
     private TextureRegion[] textures;
     private int[] keyframes;
-    private final float totalFrameRateDuration;
-    private final float perFrameRateDuration;
+    private float totalFrameRateDuration;
+    private float perFrameRateDuration;
     private float currentDuration = 0;
     private AnimationPlayState playState = AnimationPlayState.ONCE;
     private float playDirectionModifier = 1;
@@ -32,13 +32,7 @@ public class Animation implements IFrameByFrameAnimation {
         this.textures = textureArray;
         this.keyframes = keyframes;
 
-        if (frameRate.total()) {
-            this.totalFrameRateDuration = frameRate.seconds();
-            this.perFrameRateDuration = frameRate.seconds() / textures.length;
-        } else {
-            this.totalFrameRateDuration = frameRate.seconds() * textures.length;
-            this.perFrameRateDuration = frameRate.seconds();
-        }
+        setFrameRate(frameRate);
 
         percentagePerFrame = 1f / textures.length;
     }
@@ -57,6 +51,17 @@ public class Animation implements IFrameByFrameAnimation {
 
     public float perFrameDuration() {
         return perFrameRateDuration;
+    }
+
+    public Animation setFrameRate(FrameRate frameRate){
+        if (frameRate.total()) {
+            this.totalFrameRateDuration = frameRate.seconds();
+            this.perFrameRateDuration = frameRate.seconds() / textures.length;
+        } else {
+            this.totalFrameRateDuration = frameRate.seconds() * textures.length;
+            this.perFrameRateDuration = frameRate.seconds();
+        }
+        return this;
     }
 
     public int totalFrames(){
